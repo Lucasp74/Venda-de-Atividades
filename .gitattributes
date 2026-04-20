@@ -1,0 +1,12 @@
+# Normaliza quebras de linha para LF no repositório (padrão do GitHub)
+* text=auto eol=lf
+
+# Binários — não alterar
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.woff binary
+*.woff2 binary

@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Payload CMS generated files
+src/payload-types.ts
+src/app/(payload)/admin/importMap.js
+
+# Database (SQLite)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Media uploads
+public/media/
+
+# Env files
+.env
+.env.local
+.env.production
+.env.development
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Claude Code (interno)
+.claude/
+
+# TypeScript build info
+tsconfig.tsbuildinfo
