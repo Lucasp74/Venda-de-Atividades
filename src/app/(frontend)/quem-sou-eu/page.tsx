@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
+import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 
 // ── Página totalmente estática — gerada uma vez no build, sem revalidação
 export const dynamic = 'force-static'
@@ -75,6 +76,8 @@ export default function QuemSouEuPage() {
                   fill
                   className="object-cover object-top"
                   priority
+                  placeholder="blur"
+                  blurDataURL={BLUR_DATA_URL}
                 />
               </div>
             </div>

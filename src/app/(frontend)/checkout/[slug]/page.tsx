@@ -6,6 +6,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import type { Product } from '@/payload-types'
 import CheckoutWrapper from '@/components/CheckoutWrapper'
+import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 
 async function getProduct(slug: string): Promise<Product | null> {
   try {
@@ -82,6 +83,8 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
                         fill
                         className="object-cover"
                         sizes="80px"
+                        placeholder="blur"
+                        blurDataURL={BLUR_DATA_URL}
                       />
                     </div>
                   ) : (

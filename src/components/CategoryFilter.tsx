@@ -2,21 +2,11 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useRef, useState } from 'react'
+import { CATEGORIES as PRODUCT_CATEGORIES } from '@/collections/Products'
 
 const CATEGORIES = [
-  { value: '',                    label: 'Todas'              },
-  { value: 'alfabetizacao',       label: 'Alfabetização'      },
-  { value: 'matematica',          label: 'Matemática'         },
-  { value: 'portugues',           label: 'Língua Portuguesa'  },
-  { value: 'ciencias',            label: 'Ciências'           },
-  { value: 'historia-geografia',  label: 'História/Geografia' },
-  { value: 'artes',               label: 'Artes'              },
-  { value: 'educacao-fisica',     label: 'Ed. Física'         },
-  { value: 'jogos',               label: 'Jogos'              },
-  { value: 'sequencias',          label: 'Sequências'         },
-  { value: 'datas-comemorativas', label: 'Datas Comemorativas'},
-  { value: 'coordenacao-motora',  label: 'Coord. Motora'      },
-  { value: 'valores',             label: 'Valores'            },
+  { value: '', label: 'Todas' },
+  ...PRODUCT_CATEGORIES.map(({ value, label }) => ({ value, label })),
 ]
 
 function CategoryButton({

@@ -6,6 +6,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import type { Product } from '@/payload-types'
 import BuyButton from '@/components/BuyButton'
+import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 
 // ── ISR: revalida cada página de produto a cada 1 hora
 export const revalidate = 3600
@@ -135,6 +136,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover"
                   priority
+                  placeholder="blur"
+                  blurDataURL={BLUR_DATA_URL}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-8xl" aria-hidden="true">📄</div>

@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Product } from '@/payload-types'
+import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 
 const CATEGORY_STYLES: Record<string, { bg: string; label: string; badge: string }> = {
   alfabetizacao:      { bg: 'bg-card-alfa',  label: 'Alfabetização',      badge: 'bg-pink-100   text-pink-700'   },
@@ -58,6 +59,8 @@ export default function ProductCard({ product, featured = false }: Props) {
               fill
               sizes="(max-width: 768px) 100vw, 300px"
               className="object-cover transition-transform duration-300 group-hover:scale-105"
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL}
             />
           ) : (
             <span className="text-5xl select-none opacity-70" aria-hidden="true">📄</span>
