@@ -7,7 +7,6 @@ out/
 
 # Payload CMS generated files
 src/payload-types.ts
-src/app/(payload)/admin/importMap.js
 
 # Database (SQLite)
 *.db
