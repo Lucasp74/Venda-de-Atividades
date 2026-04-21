@@ -1,6 +1,10 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+function getResend() {
+  const key = process.env.RESEND_API_KEY
+  if (!key) throw new Error('RESEND_API_KEY não configurada')
+  return new Resend(key)
+}
 
 async function withRetry<T>(
   fn: () => Promise<T>,
@@ -44,7 +48,7 @@ export async function sendDownloadEmail({
     ? downloadUrl
     : '#'
 
-  const { data, error } = await withRetry(() => resend.emails.send({
+  const { data, error } = await withRetry(() => getResend().emails.send({
     from:    `Prô Dani <noreply@${process.env.EMAIL_DOMAIN ?? 'profdani.com.br'}>`,
     to,
     subject: `Seu download está pronto — ${safeTitle}`,
