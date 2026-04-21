@@ -130,34 +130,37 @@ export async function trackServerPurchase(order: {
 
   const clientId = order.clientId ?? `server.${Date.now()}`
 
+  // Nota: o GA4 Measurement Protocol exige api_secret como query param (limitação da API Google).
+  // Para minimizar exposição, nunca logamos a URL completa em caso de erro.
+  const gaUrl = new URL('https://www.google-analytics.com/mp/collect')
+  gaUrl.searchParams.set('measurement_id', measurementId)
+  gaUrl.searchParams.set('api_secret', apiSecret)
+
   try {
-    await fetch(
-      `https://www.google-analytics.com/mp/collect?measurement_id=${measurementId}&api_secret=${apiSecret}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client_id: clientId,
-          events: [{
-            name: 'purchase',
-            params: {
-              transaction_id:  order.transactionId,
-              currency:        'BRL',
-              value:           order.price,
-              items: [{
-                item_id:       order.productId,
-                item_name:     order.productName,
-                item_category: order.category,
-                price:         order.price,
-                quantity:      1,
-              }],
-            },
-          }],
-        }),
-      }
-    )
+    await fetch(gaUrl.toString(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_id: clientId,
+        events: [{
+          name: 'purchase',
+          params: {
+            transaction_id:  order.transactionId,
+            currency:        'BRL',
+            value:           order.price,
+            items: [{
+              item_id:       order.productId,
+              item_name:     order.productName,
+              item_category: order.category,
+              price:         order.price,
+              quantity:      1,
+            }],
+          },
+        }],
+      }),
+    })
   } catch (err) {
-    // Nunca deixar falha de analytics quebrar o fluxo de compra
-    console.warn('[Analytics] Falha ao enviar evento de compra via Measurement Protocol:', err)
+    // Nunca logamos a URL (contém api_secret). Apenas indicamos a falha.
+    console.warn('[Analytics] Falha ao enviar evento de compra via Measurement Protocol — transactionId:', order.transactionId)
   }
 }

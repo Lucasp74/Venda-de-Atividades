@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { initMercadoPago, Payment } from '@mercadopago/sdk-react'
 import { useRouter } from 'next/navigation'
 
@@ -18,47 +18,67 @@ type PaymentStatus = 'loading' | 'idle' | 'processing' | 'approved' | 'rejected'
 
 export default function CheckoutBrick({ productId, productTitle, price }: Props) {
   const router = useRouter()
-  const [status, setStatus]           = useState<PaymentStatus>('loading')
-  const [errorMsg, setErrorMsg]       = useState('')
+  const [status, setStatus]             = useState<PaymentStatus>('loading')
+  const [errorMsg, setErrorMsg]         = useState('')
   const [preferenceId, setPreferenceId] = useState<string | null>(null)
+  // sessionId gerado uma única vez por montagem — garante idempotência em retries
+  const sessionId = useRef<string>(globalThis.crypto.randomUUID())
 
   // Cria preferência no backend ao montar o componente
   useEffect(() => {
+    const controller = new AbortController()
+    const timeoutId  = setTimeout(() => controller.abort(), 15_000)
+
     async function createPref() {
       try {
         const res = await fetch('/api/mercadopago/checkout', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId, productTitle, price }),
+          body:    JSON.stringify({ productId, productTitle, price }),
+          signal:  controller.signal,
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error ?? 'Erro ao criar preferência')
         setPreferenceId(data.preference_id)
         setStatus('idle')
       } catch (err) {
+        if ((err as Error).name === 'AbortError') {
+          setErrorMsg('Tempo esgotado ao conectar com o servidor de pagamento. Recarregue a página.')
+        } else {
+          setErrorMsg(err instanceof Error ? err.message : 'Erro ao iniciar checkout')
+        }
         setStatus('error')
-        setErrorMsg(err instanceof Error ? err.message : 'Erro ao iniciar checkout')
+      } finally {
+        clearTimeout(timeoutId)
       }
     }
     createPref()
+    return () => { controller.abort(); clearTimeout(timeoutId) }
   }, [productId, productTitle, price])
 
-  const handleSubmit = useCallback(async (param: Record<string, unknown>) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSubmit = useCallback(async (param: any) => {
+    // Proteção contra duplo clique — ignora se já está processando
+    if (status === 'processing') return
     setStatus('processing')
     setErrorMsg('')
 
+    const controller = new AbortController()
+    const timeoutId  = setTimeout(() => controller.abort(), 30_000)
+
     try {
-      // O Payment Brick envia { formData, selectedPaymentMethod }
       const paymentData = (param.formData as Record<string, unknown>) ?? param
 
       const res = await fetch('/api/mercadopago/process-payment', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body:    JSON.stringify({
           ...paymentData,
           productId,
           productTitle,
+          sessionId: sessionId.current,
         }),
+        signal: controller.signal,
       })
 
       const data = await res.json()
@@ -82,14 +102,21 @@ export default function CheckoutBrick({ productId, productTitle, price }: Props)
           setErrorMsg(getRejectMessage(data.status_detail))
           break
         default:
-          setStatus('error')
-          setErrorMsg('Status inesperado. Tente novamente.')
+          // Qualquer status desconhecido trata como pendente — nunca trava o usuário
+          setStatus('pending')
+          setTimeout(() => router.push('/checkout/pendente'), 2000)
       }
     } catch (err) {
+      if ((err as Error).name === 'AbortError') {
+        setErrorMsg('Tempo esgotado. Verifique seu e-mail — se o pagamento foi aprovado, o link será enviado automaticamente.')
+      } else {
+        setErrorMsg(err instanceof Error ? err.message : 'Erro inesperado')
+      }
       setStatus('error')
-      setErrorMsg(err instanceof Error ? err.message : 'Erro inesperado')
+    } finally {
+      clearTimeout(timeoutId)
     }
-  }, [productId, productTitle, router])
+  }, [status, productId, productTitle, router])
 
   const handleError = useCallback((error: unknown) => {
     console.error('[PaymentBrick] Error:', error)

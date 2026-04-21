@@ -2,6 +2,31 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  attempts = 3,
+  delayMs   = 1000,
+): Promise<T> {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn()
+    } catch (err) {
+      if (i === attempts - 1) throw err
+      await new Promise(r => setTimeout(r, delayMs * 2 ** i))
+    }
+  }
+  throw new Error('withRetry: unreachable')
+}
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+}
+
 export async function sendDownloadEmail({
   to,
   buyerName,
@@ -13,10 +38,16 @@ export async function sendDownloadEmail({
   productTitle: string
   downloadUrl:  string
 }) {
-  const { data, error } = await resend.emails.send({
+  const safeName     = escapeHtml(buyerName || 'professora')
+  const safeTitle    = escapeHtml(productTitle)
+  const safeUrl      = downloadUrl.startsWith('https://') || downloadUrl.startsWith('http://localhost')
+    ? downloadUrl
+    : '#'
+
+  const { data, error } = await withRetry(() => resend.emails.send({
     from:    `Prô Dani <noreply@${process.env.EMAIL_DOMAIN ?? 'profdani.com.br'}>`,
     to,
-    subject: `Seu download está pronto — ${productTitle}`,
+    subject: `Seu download está pronto — ${safeTitle}`,
     html: `
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -39,7 +70,7 @@ export async function sendDownloadEmail({
         <tr>
           <td style="padding:40px;">
             <p style="font-size:22px;margin:0 0 8px;font-weight:800;color:#2D2D2D;">
-              Olá, ${buyerName || 'professora'}! 🎉
+              Olá, ${safeName}! 🎉
             </p>
             <p style="font-size:15px;color:#777;margin:0 0 24px;line-height:1.7;">
               Seu pagamento foi confirmado! Clique no botão abaixo para baixar sua atividade.
@@ -47,12 +78,12 @@ export async function sendDownloadEmail({
 
             <div style="background:#FFF0F5;border-radius:16px;padding:20px;margin-bottom:28px;">
               <p style="margin:0 0 4px;font-size:12px;color:#FF6B9D;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Produto adquirido</p>
-              <p style="margin:0;font-size:16px;font-weight:700;color:#2D2D2D;">${productTitle}</p>
+              <p style="margin:0;font-size:16px;font-weight:700;color:#2D2D2D;">${safeTitle}</p>
             </div>
 
             <div style="text-align:center;margin-bottom:28px;">
               <a
-                href="${downloadUrl}"
+                href="${safeUrl}"
                 style="display:inline-block;background:linear-gradient(135deg,#FF6B9D,#E0527F);color:#ffffff;font-size:16px;font-weight:800;padding:16px 36px;border-radius:50px;text-decoration:none;box-shadow:0 4px 20px rgba(255,107,157,0.35);"
               >
                 📥 Baixar Atividade
@@ -60,11 +91,11 @@ export async function sendDownloadEmail({
             </div>
 
             <p style="font-size:13px;color:#aaa;text-align:center;margin:0 0 4px;">
-              Link válido por 7 dias. Dúvidas? Fale no WhatsApp.
+              Link válido por 7 dias.
             </p>
             <p style="font-size:12px;color:#ccc;text-align:center;margin:0;">
               Se o botão não funcionar, copie este link: <br/>
-              <span style="color:#FF6B9D;">${downloadUrl}</span>
+              <span style="color:#FF6B9D;">${safeUrl}</span>
             </p>
           </td>
         </tr>
@@ -84,7 +115,7 @@ export async function sendDownloadEmail({
 </body>
 </html>
     `.trim(),
-  })
+  }))
 
   if (error) throw new Error(`Falha ao enviar e-mail: ${error.message}`)
   return data

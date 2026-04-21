@@ -39,7 +39,7 @@ const VALUES = [
   {
     icon: '💬',
     title: 'Suporte Ativo',
-    desc:  'Dúvidas? Pode me chamar no WhatsApp. Estou sempre disponível para ajudar.',
+    desc:  'Dúvidas? Entre em contato por e-mail. Estou sempre disponível para ajudar.',
     color: 'bg-purple-50 border-purple-100',
   },
   {
@@ -121,14 +121,9 @@ export default function QuemSouEuPage() {
                 <Link href="/atividades" className="btn-primary">
                   Ver Atividades
                 </Link>
-                <a
-                  href="https://wa.me/5500000000000"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-outline"
-                >
-                  Falar no WhatsApp
-                </a>
+                <Link href="/atividades" className="btn-outline">
+                  Ver Atividades
+                </Link>
               </div>
             </div>
           </div>

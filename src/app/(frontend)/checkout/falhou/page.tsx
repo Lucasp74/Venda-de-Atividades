@@ -18,9 +18,9 @@ export default function FalouPage() {
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link href="/atividades" className="btn-primary">Tentar novamente</Link>
-          <a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer" className="btn-outline">
-            Preciso de ajuda
-          </a>
+          <Link href="/atividades" className="btn-outline">
+            Ver outros produtos
+          </Link>
         </div>
       </div>
     </section>

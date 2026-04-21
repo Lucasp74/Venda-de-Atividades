@@ -68,13 +68,15 @@ export type ProcessPaymentParams = {
   }
   productId:    string
   productTitle: string
+  sessionId?:   string
 }
 
 export async function processPayment(params: ProcessPaymentParams) {
   const client     = getMercadoPagoClient()
   const paymentApi = new Payment(client)
 
-  const idempotencyKey = crypto.randomUUID()
+  // Usa sessionId do frontend quando disponível — garante que retries não criem cobranças duplicadas
+  const idempotencyKey = params.sessionId ?? crypto.randomUUID()
 
   const result = await paymentApi.create({
     body: {

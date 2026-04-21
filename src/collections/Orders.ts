@@ -10,8 +10,8 @@ export const Orders: CollectionConfig = {
     description: 'Registro de todos os pedidos realizados.',
   },
   access: {
-    read: ({ req }) => Boolean(req.user),
-    create: () => true,
+    read:   ({ req }) => Boolean(req.user),
+    create: ({ req }) => Boolean(req.user),
     update: ({ req }) => Boolean(req.user),
     delete: ({ req }) => Boolean(req.user),
   },
@@ -62,6 +62,7 @@ export const Orders: CollectionConfig = {
       name: 'mercadoPagoId',
       type: 'text',
       label: 'ID Mercado Pago',
+      unique: true,
       admin: { readOnly: true },
     },
     {
@@ -81,6 +82,32 @@ export const Orders: CollectionConfig = {
       type: 'text',
       label: 'Método de pagamento',
       admin: { readOnly: true },
+    },
+    {
+      name: 'downloadCount',
+      type: 'number',
+      label: 'Nº de downloads realizados',
+      defaultValue: 0,
+      admin: { readOnly: true, description: 'Incrementado a cada download. Limite: 5.' },
+    },
+    {
+      name: 'emailSent',
+      type: 'checkbox',
+      label: 'E-mail de download enviado',
+      defaultValue: false,
+      admin: {
+        readOnly: true,
+        description: 'Se falso, o cliente não recebeu o link. Use o botão "Reenviar Link" para corrigir.',
+      },
+    },
+    {
+      name: 'resendAction',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '@/app/(payload)/custom/ResendDownloadButton',
+        },
+      },
     },
   ],
   timestamps: true,

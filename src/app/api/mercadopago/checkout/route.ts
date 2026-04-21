@@ -6,9 +6,22 @@ import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
 
 const limiter = rateLimit({ interval: 60_000, limit: 10 })
 
+function isAllowedOrigin(req: NextRequest): boolean {
+  const origin  = req.headers.get('origin')
+  const referer = req.headers.get('referer')
+  const base    = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
+  const allowed = [base, 'http://localhost:3000']
+  const source  = origin ?? referer ?? ''
+  return allowed.some(url => source.startsWith(url))
+}
+
 export async function POST(req: NextRequest) {
   const rl = limiter(getClientIp(req))
   if (!rl.success) return rateLimitResponse(rl)
+
+  if (!isAllowedOrigin(req)) {
+    return NextResponse.json({ error: 'Origem não autorizada' }, { status: 403 })
+  }
 
   try {
     const body = await req.json()

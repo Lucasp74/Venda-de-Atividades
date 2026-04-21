@@ -9,6 +9,15 @@ import crypto from 'crypto'
 
 const limiter = rateLimit({ interval: 60_000, limit: 5 })
 
+function isAllowedOrigin(req: NextRequest): boolean {
+  const origin  = req.headers.get('origin')
+  const referer = req.headers.get('referer')
+  const base    = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
+  const allowed = [base, 'http://localhost:3000']
+  const source  = origin ?? referer ?? ''
+  return allowed.some(url => source.startsWith(url))
+}
+
 function generateDownloadToken(): string {
   return crypto.randomBytes(32).toString('hex')
 }
@@ -16,6 +25,10 @@ function generateDownloadToken(): string {
 export async function POST(req: NextRequest) {
   const rl = limiter(getClientIp(req))
   if (!rl.success) return rateLimitResponse(rl)
+
+  if (!isAllowedOrigin(req)) {
+    return NextResponse.json({ error: 'Origem não autorizada' }, { status: 403 })
+  }
 
   try {
     const body = await req.json()
@@ -34,6 +47,8 @@ export async function POST(req: NextRequest) {
       payer,
     } = paymentData
 
+    const sessionId = (body.sessionId as string | undefined) ?? undefined
+
     if (!productId || !transaction_amount) {
       return NextResponse.json({ error: 'Dados inválidos' }, { status: 400 })
     }
@@ -47,6 +62,7 @@ export async function POST(req: NextRequest) {
 
     // Processa pagamento no Mercado Pago
     const payment = await processPayment({
+      sessionId,
       token,
       issuer_id:          issuer_id ?? '',
       payment_method_id,
@@ -80,7 +96,7 @@ export async function POST(req: NextRequest) {
         const baseUrl       = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
         const downloadUrl   = `${baseUrl}/api/download/${downloadToken}`
 
-        await payload.create({
+        const createdOrder = await payload.create({
           collection: 'orders',
           data: {
             email:          buyerEmail,
@@ -93,10 +109,11 @@ export async function POST(req: NextRequest) {
             downloadToken,
             paymentMethod:  payment.payment_type_id ?? payment_method_id ?? '',
             downloadSentAt: new Date().toISOString(),
+            emailSent:      false,
           },
         })
 
-        // Envia e-mail com link de download (não bloqueia o pagamento)
+        // Envia e-mail com link de download e registra resultado
         if (buyerEmail) {
           try {
             await sendDownloadEmail({
@@ -105,8 +122,13 @@ export async function POST(req: NextRequest) {
               productTitle: product.title,
               downloadUrl,
             })
+            await payload.update({
+              collection: 'orders',
+              id: createdOrder.id,
+              data: { emailSent: true },
+            })
           } catch (emailErr) {
-            console.warn('[ProcessPayment] Falha ao enviar e-mail:', emailErr)
+            console.warn('[ProcessPayment] Falha ao enviar e-mail — orderId:', createdOrder.id, emailErr)
           }
         }
 

@@ -14,18 +14,27 @@ function generateDownloadToken(): string {
 }
 
 function verifyWebhookSignature(req: NextRequest, body: string): boolean {
-  const secret    = process.env.MERCADOPAGO_WEBHOOK_SECRET
-  if (!secret) return true // skip in dev
+  const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET
+  if (!secret) {
+    console.error('[Webhook] MERCADOPAGO_WEBHOOK_SECRET não configurado — requisição rejeitada')
+    return false
+  }
 
-  const signature = req.headers.get('x-signature') ?? ''
+  const signature  = req.headers.get('x-signature') ?? ''
   const xRequestId = req.headers.get('x-request-id') ?? ''
+
+  if (!xRequestId) {
+    console.warn('[Webhook] Header x-request-id ausente')
+    return false
+  }
+
   const ts = signature.split(',').find(p => p.startsWith('ts='))?.split('=')[1]
   const v1 = signature.split(',').find(p => p.startsWith('v1='))?.split('=')[1]
   if (!ts || !v1) return false
 
   const dataToSign = `id=${xRequestId};request-id=${xRequestId};ts=${ts};`
   const hmac = crypto.createHmac('sha256', secret).update(dataToSign).digest('hex')
-  return hmac === v1
+  return crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(v1))
 }
 
 export async function POST(req: NextRequest) {
@@ -97,7 +106,7 @@ export async function POST(req: NextRequest) {
     const downloadUrl   = `${baseUrl}/api/download/${downloadToken}`
 
     // Create order
-    await payload.create({
+    const createdOrder = await payload.create({
       collection: 'orders',
       data: {
         email:          buyerEmail,
@@ -110,17 +119,27 @@ export async function POST(req: NextRequest) {
         downloadToken,
         paymentMethod,
         downloadSentAt: new Date().toISOString(),
+        emailSent:      false,
       },
     })
 
-    // Send email with download link
+    // Send email with download link e registra resultado
     if (buyerEmail) {
-      await sendDownloadEmail({
-        to:           buyerEmail,
-        buyerName,
-        productTitle: product.title,
-        downloadUrl,
-      })
+      try {
+        await sendDownloadEmail({
+          to:           buyerEmail,
+          buyerName,
+          productTitle: product.title,
+          downloadUrl,
+        })
+        await payload.update({
+          collection: 'orders',
+          id: createdOrder.id,
+          data: { emailSent: true },
+        })
+      } catch (emailErr) {
+        console.warn('[Webhook] Falha ao enviar e-mail — orderId:', createdOrder.id, emailErr)
+      }
     }
 
     // ── Google Analytics 4 — Evento de compra (server-side) ──────
