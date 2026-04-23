@@ -5,18 +5,10 @@ import config from '@payload-config'
 import { sendDownloadEmail } from '@/lib/email'
 import { trackServerPurchase } from '@/lib/analytics'
 import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
+import { isAllowedOrigin } from '@/lib/allowed-origin'
 import crypto from 'crypto'
 
 const limiter = rateLimit({ interval: 60_000, limit: 5 })
-
-function isAllowedOrigin(req: NextRequest): boolean {
-  const origin  = req.headers.get('origin')
-  const referer = req.headers.get('referer')
-  const base    = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
-  const allowed = [base, 'http://localhost:3000']
-  const source  = origin ?? referer ?? ''
-  return allowed.some(url => source.startsWith(url))
-}
 
 function generateDownloadToken(): string {
   return crypto.randomBytes(32).toString('hex')
@@ -153,8 +145,8 @@ export async function POST(req: NextRequest) {
       payment_id:    mpPaymentId,
     })
   } catch (err: unknown) {
+    // Log completo server-side, mas nunca expõe detalhes internos ao cliente
     console.error('[ProcessPayment] Error:', err)
-    const message = err instanceof Error ? err.message : 'Erro ao processar pagamento'
-    return NextResponse.json({ error: message }, { status: 500 })
+    return NextResponse.json({ error: 'Erro ao processar pagamento. Tente novamente.' }, { status: 500 })
   }
 }

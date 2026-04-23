@@ -32,8 +32,18 @@ function verifyWebhookSignature(req: NextRequest, body: string): boolean {
   const v1 = signature.split(',').find(p => p.startsWith('v1='))?.split('=')[1]
   if (!ts || !v1) return false
 
-  const dataToSign = `id=${xRequestId};request-id=${xRequestId};ts=${ts};`
+  // Formato oficial do Mercado Pago:
+  //   id = query param "data.id" da URL do webhook (o ID do pagamento)
+  //   request-id = header x-request-id
+  //   ts = timestamp extraído do x-signature
+  // Ref: https://www.mercadopago.com.br/developers/pt/docs/your-integrations/notifications/webhooks
+  const dataId     = req.nextUrl.searchParams.get('data.id') ?? ''
+  const dataToSign = `id=${dataId};request-id=${xRequestId};ts=${ts};`
+
   const hmac = crypto.createHmac('sha256', secret).update(dataToSign).digest('hex')
+
+  // timingSafeEqual exige buffers do mesmo tamanho
+  if (hmac.length !== v1.length) return false
   return crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(v1))
 }
 

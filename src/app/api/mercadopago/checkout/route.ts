@@ -3,17 +3,9 @@ import { createPreference } from '@/lib/mercadopago'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
+import { isAllowedOrigin } from '@/lib/allowed-origin'
 
 const limiter = rateLimit({ interval: 60_000, limit: 10 })
-
-function isAllowedOrigin(req: NextRequest): boolean {
-  const origin  = req.headers.get('origin')
-  const referer = req.headers.get('referer')
-  const base    = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
-  const allowed = [base, 'http://localhost:3000']
-  const source  = origin ?? referer ?? ''
-  return allowed.some(url => source.startsWith(url))
-}
 
 export async function POST(req: NextRequest) {
   const rl = limiter(getClientIp(req))
