@@ -13,7 +13,10 @@ import { Orders   } from './collections/Orders'
 import { Products } from './collections/Products'
 import { Users    } from './collections/Users'
 
-const isProd = process.env.NODE_ENV === 'production'
+// Usa PostgreSQL sempre que DATABASE_URL estiver definida (produção ou init local)
+// Isso desacopla a seleção de adapter do NODE_ENV, permitindo rodar
+// o push de schema com NODE_ENV=development apontando para o Neon.
+const isProd = Boolean(process.env.DATABASE_URL?.startsWith('postgres'))
 
 const filename = fileURLToPath(import.meta.url)
 const dirname  = path.dirname(filename)
