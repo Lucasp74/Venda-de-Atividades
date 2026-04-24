@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "payload generate:types && payload generate:importMap && next build",
     "start": "next start",
+    "postinstall": "node scripts/patch-payload.mjs",
     "generate:types": "payload generate:types",
     "generate:importmap": "payload generate:importMap"
   },

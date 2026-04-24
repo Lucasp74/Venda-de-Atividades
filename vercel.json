@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "buildCommand": "NODE_ENV=development npx payload migrate:create --name=init; npm run build",
+  "buildCommand": "npm run build",
   "functions": {
     "src/app/api/**": {
       "maxDuration": 30
