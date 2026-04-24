@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npm run build",
+  "buildCommand": "node scripts/patch-payload.mjs && npm run build",
   "functions": {
     "src/app/api/**": {
       "maxDuration": 30
