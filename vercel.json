@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npm run build && npx payload migrate",
+  "buildCommand": "npm run build",
   "functions": {
     "src/app/api/**": {
       "maxDuration": 30

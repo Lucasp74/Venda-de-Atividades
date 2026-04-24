@@ -64,6 +64,10 @@ export default buildConfig({
             return url
           })(),
         },
+        // Cria/atualiza as tabelas automaticamente na inicialização.
+        // Equivale a "drizzle-kit push" — ideal para projetos sem arquivos
+        // de migração gerados ainda (evita o erro "relation does not exist").
+        push: true,
       })
     : sqliteAdapter({
         client: {
