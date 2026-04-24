@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "buildCommand": "NODE_ENV=development node --import tsx/esm scripts/db-init.mjs && npm run build",
+  "buildCommand": "NODE_ENV=development npx tsx scripts/db-init.mjs && npm run build",
   "functions": {
     "src/app/api/**": {
       "maxDuration": 30
