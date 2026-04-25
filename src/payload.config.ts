@@ -67,10 +67,10 @@ export default buildConfig({
             return url
           })(),
         },
-        // Cria/atualiza as tabelas automaticamente na inicialização.
-        // Equivale a "drizzle-kit push" — ideal para projetos sem arquivos
-        // de migração gerados ainda (evita o erro "relation does not exist").
-        push: true,
+        // push: true foi removido — tabelas já existem no Neon.
+        // drizzle-kit não está disponível em produção (dev dependency).
+        // Para mudanças de schema futuras: rodar o servidor local apontando
+        // para DATABASE_URL do Neon, o que dispara pushDevSchema em dev mode.
       })
     : sqliteAdapter({
         client: {
