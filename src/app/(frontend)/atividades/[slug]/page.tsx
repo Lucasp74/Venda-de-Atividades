@@ -134,7 +134,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   alt={cover?.alt ?? product.title}
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-cover"
+                  className="object-contain p-4"
                   priority
                   placeholder="blur"
                   blurDataURL={BLUR_DATA_URL}

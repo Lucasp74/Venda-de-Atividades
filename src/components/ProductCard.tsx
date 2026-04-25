@@ -59,7 +59,7 @@ export default function ProductCard({ product, featured = false }: Props) {
               alt={cover?.alt ?? product.title}
               fill
               sizes="(max-width: 768px) 100vw, 300px"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              className="object-contain transition-transform duration-300 group-hover:scale-105 p-2"
               placeholder="blur"
               blurDataURL={BLUR_DATA_URL}
             />
