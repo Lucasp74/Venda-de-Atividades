@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
+import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 import type { Where } from 'payload'
 import config from '@payload-config'
@@ -7,31 +8,36 @@ import ProductCard from '@/components/ProductCard'
 import CategoryFilter from '@/components/CategoryFilter'
 import type { Product } from '@/payload-types'
 
-// ── ISR: revalida a cada 30 min — catálogo atualiza frequentemente
-export const revalidate = 1800
+// Sem ISR fixo — a página usa searchParams (dinâmica por natureza).
+// unstable_cache com tag 'products' garante atualização imediata ao salvar.
+export const revalidate = 60
 
 export const metadata: Metadata = {
   title: 'Atividades',
   description: 'Explore mais de 200 atividades e e-books educativos infantis. Alfabetização, Matemática, Artes, Ciências e muito mais.',
 }
 
-async function getProducts(category?: string): Promise<{ docs: Product[]; totalDocs: number }> {
-  try {
-    const payload = await getPayload({ config })
-    const conditions: Where[] = [{ status: { equals: 'published' } }]
-    if (category) conditions.push({ category: { equals: category } })
+const getProducts = unstable_cache(
+  async (category?: string): Promise<{ docs: Product[]; totalDocs: number }> => {
+    try {
+      const payload = await getPayload({ config })
+      const conditions: Where[] = [{ status: { equals: 'published' } }]
+      if (category) conditions.push({ category: { equals: category } })
 
-    const result = await payload.find({
-      collection: 'products',
-      where: { and: conditions },
-      limit: 100,
-      sort: '-createdAt',
-    })
-    return { docs: result.docs as Product[], totalDocs: result.totalDocs }
-  } catch {
-    return { docs: [], totalDocs: 0 }
-  }
-}
+      const result = await payload.find({
+        collection: 'products',
+        where: { and: conditions },
+        limit: 100,
+        sort: '-createdAt',
+      })
+      return { docs: result.docs as Product[], totalDocs: result.totalDocs }
+    } catch {
+      return { docs: [], totalDocs: 0 }
+    }
+  },
+  ['atividades-list'],
+  { tags: ['products'] },
+)
 
 function ProductsSkeleton() {
   return (

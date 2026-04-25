@@ -43,10 +43,17 @@ export const Products: CollectionConfig = {
       async ({ doc }) => {
         // Import din\u00e2mico evita que next/cache seja inclu\u00eddo em bundles de cliente
         // (CategoryFilter.tsx importa CATEGORIES deste arquivo).
-        const { revalidatePath } = await import('next/cache')
-        revalidatePath('/', 'page')
-        revalidatePath('/atividades', 'page')
-        revalidatePath(`/atividades/${doc.slug}`, 'page')
+        try {
+          const { revalidateTag, revalidatePath } = await import('next/cache')
+          // revalidateTag invalida os dados em cache (unstable_cache)
+          revalidateTag('products')
+          // revalidatePath invalida o HTML das p\u00e1ginas em ISR
+          revalidatePath('/', 'page')
+          revalidatePath('/atividades', 'page')
+          revalidatePath(`/atividades/${doc.slug}`, 'page')
+        } catch (e) {
+          console.error('[Products] falha ao revalidar cache:', e)
+        }
       },
     ],
   },

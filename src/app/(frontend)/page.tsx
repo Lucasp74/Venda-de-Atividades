@@ -1,51 +1,60 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import ProductCard from '@/components/ProductCard'
 import type { Product } from '@/payload-types'
 
-// ── ISR: revalida a cada 1 hora — página serve do cache e atualiza em background
-export const revalidate = 3600
+// ISR de 60s como fallback — revalidateTag('products') garante atualização imediata
+export const revalidate = 60
 
 export const metadata: Metadata = {
   title: 'Prô Dani — Atividades Infantis',
   description: 'E-books e atividades educativas criados com carinho para tornar o aprendizado mais colorido e divertido.',
 }
 
-async function getFeaturedProducts(): Promise<Product[]> {
-  try {
-    const payload = await getPayload({ config })
-    const { docs } = await payload.find({
-      collection: 'products',
-      where: {
-        and: [
-          { featured: { equals: true  } },
-          { status:   { equals: 'published' } },
-        ],
-      },
-      limit: 4,
-      sort: '-createdAt',
-    })
-    return docs as Product[]
-  } catch {
-    return []
-  }
-}
+const getFeaturedProducts = unstable_cache(
+  async (): Promise<Product[]> => {
+    try {
+      const payload = await getPayload({ config })
+      const { docs } = await payload.find({
+        collection: 'products',
+        where: {
+          and: [
+            { featured: { equals: true  } },
+            { status:   { equals: 'published' } },
+          ],
+        },
+        limit: 4,
+        sort: '-createdAt',
+      })
+      return docs as Product[]
+    } catch {
+      return []
+    }
+  },
+  ['home-featured-products'],
+  { tags: ['products'] },
+)
 
-async function getTotalProducts(): Promise<number> {
-  try {
-    const payload = await getPayload({ config })
-    const { totalDocs } = await payload.find({
-      collection: 'products',
-      where: { status: { equals: 'published' } },
-      limit: 1,
-    })
-    return totalDocs
-  } catch {
-    return 0
-  }
-}
+const getTotalProducts = unstable_cache(
+  async (): Promise<number> => {
+    try {
+      const payload = await getPayload({ config })
+      const { totalDocs } = await payload.find({
+        collection: 'products',
+        where: { status: { equals: 'published' } },
+        limit: 1,
+      })
+      return totalDocs
+    } catch {
+      return 0
+    }
+  },
+  ['home-total-products'],
+  { tags: ['products'] },
+)
 
 const CATEGORY_ICONS: Record<string, string> = {
   alfabetizacao: '📖',
