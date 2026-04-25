@@ -38,7 +38,7 @@ function ProductsSkeleton() {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} className="rounded-2xl overflow-hidden bg-white shadow-card">
-          <div className="skeleton h-44 w-full" />
+          <div className="skeleton aspect-[5/3] w-full" />
           <div className="p-4 space-y-2">
             <div className="skeleton h-3 w-20 rounded-full" />
             <div className="skeleton h-4 w-full rounded" />
