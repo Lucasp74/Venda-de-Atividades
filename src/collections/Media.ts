@@ -4,6 +4,13 @@ export const Media: CollectionConfig = {
   slug: 'media',
   labels: { singular: 'Mídia', plural: 'Mídias' },
   access: { read: () => true },
+  admin: {
+    group: 'Sistema',
+    description: 'Imagens e PDFs usados nas atividades. Para fazer upload, use os campos diretamente na tela de edição de cada atividade.',
+    components: {
+      Description: '@/app/(payload)/custom/MediaBanner',
+    },
+  },
   upload: {
     staticDir: 'public/media',
     imageSizes: [
