@@ -39,6 +39,10 @@ export default buildConfig({
           Component: '@/app/(payload)/custom/AnalyticsWrapper',
           path: '/analytics',
         },
+        uploadPdf: {
+          Component: '@/app/(payload)/custom/LargeUpload',
+          path: '/upload-arquivo',
+        },
       },
     },
   },

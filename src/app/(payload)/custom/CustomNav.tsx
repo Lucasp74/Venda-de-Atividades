@@ -20,8 +20,9 @@ const navItems = [
   {
     label: 'Sistema',
     links: [
-      { href: '/admin/collections/media', label: 'Mídias'    },
-      { href: '/admin/collections/users', label: 'Usuários'  },
+      { href: '/admin/upload-arquivo',    label: '⬆ Upload Grande' },
+      { href: '/admin/collections/media', label: 'Mídias'          },
+      { href: '/admin/collections/users', label: 'Usuários'        },
     ],
   },
 ]
