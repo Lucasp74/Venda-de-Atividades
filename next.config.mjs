@@ -67,10 +67,10 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               // Fontes
               "font-src 'self' https://fonts.gstatic.com",
-              // Imagens: próprias + Vercel Blob + Google Analytics + dados inline
-              "img-src 'self' data: blob: https://*.vercel-storage.com https://www.google-analytics.com https://www.googletagmanager.com",
-              // Fetch/XHR: próprios + Mercado Pago + Analytics
-              "connect-src 'self' https://api.mercadopago.com https://www.google-analytics.com https://region1.google-analytics.com https://stats.g.doubleclick.net",
+              // Imagens: próprias + Vercel Blob + Google Analytics + Gravatar (admin)
+              "img-src 'self' data: blob: https://*.vercel-storage.com https://www.google-analytics.com https://www.googletagmanager.com https://www.gravatar.com https://secure.gravatar.com",
+              // Fetch/XHR: próprios + Mercado Pago + Analytics + Vercel Blob (upload)
+              "connect-src 'self' https://api.mercadopago.com https://www.google-analytics.com https://region1.google-analytics.com https://stats.g.doubleclick.net https://*.vercel-storage.com",
               // Frames: Mercado Pago usa iframes para o checkout
               "frame-src 'self' https://www.mercadopago.com.br https://*.mercadopago.com",
               "object-src 'none'",
