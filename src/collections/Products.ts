@@ -1,5 +1,4 @@
 import type { CollectionConfig } from 'payload'
-import { revalidatePath } from 'next/cache'
 
 export const CATEGORIES = [
   { label: 'Alfabetização e Leitura',         value: 'alfabetizacao'     },
@@ -41,9 +40,10 @@ export const Products: CollectionConfig = {
       },
     ],
     afterChange: [
-      ({ doc }) => {
-        // Invalida o cache das p\u00e1ginas p\u00fablicas sempre que uma atividade for salva.
-        // Garante que destaque na home e listagem de atividades atualizam na hora.
+      async ({ doc }) => {
+        // Import din\u00e2mico evita que next/cache seja inclu\u00eddo em bundles de cliente
+        // (CategoryFilter.tsx importa CATEGORIES deste arquivo).
+        const { revalidatePath } = await import('next/cache')
         revalidatePath('/', 'page')
         revalidatePath('/atividades', 'page')
         revalidatePath(`/atividades/${doc.slug}`, 'page')
