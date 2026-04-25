@@ -3,34 +3,43 @@ import type { NextRequest } from 'next/server'
 /**
  * Verifica se a requisição vem de uma origem permitida (proteção CSRF).
  *
- * Usa comparação exata de protocolo + host para evitar o bypass que
- * `source.startsWith(url)` permite (ex: https://profdani.com.br.evil.com
- * passaria num startsWith ingênuo contra "https://profdani.com.br").
+ * Estratégia em três camadas — da mais confiável para a menos:
+ * 1. Header Host  — sempre presente, definido pela infraestrutura (Vercel/proxy)
+ * 2. Header Origin — enviado pelo browser em POSTs (pode ser nulo em proxies)
+ * 3. Header Referer — fallback quando Origin não está disponível
  */
 export function isAllowedOrigin(req: NextRequest): boolean {
-  const origin  = req.headers.get('origin')
-  const referer = req.headers.get('referer')
-  const base    = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
 
-  // Constrói o conjunto de origens permitidas (produção + dev local)
+  // Monta conjunto de hosts permitidos
   const allowedHosts = new Set<string>()
   for (const raw of [base, 'http://localhost:3000']) {
     try {
-      const u = new URL(raw)
-      allowedHosts.add(`${u.protocol}//${u.host}`)
+      allowedHosts.add(new URL(raw).host)
     } catch {
       // URL inválida na env — ignora
     }
   }
 
-  // Prefers Origin (mais confiável); cai para Referer como fallback
-  const source = origin ?? referer ?? ''
-  if (!source) return false
+  // 1. Host header — mais confiável em ambientes com proxy (Vercel)
+  const host = req.headers.get('host') ?? ''
+  if (host && allowedHosts.has(host)) return true
 
-  try {
-    const src = new URL(source)
-    return allowedHosts.has(`${src.protocol}//${src.host}`)
-  } catch {
-    return false
+  // 2. Origin header
+  const origin = req.headers.get('origin')
+  if (origin) {
+    try {
+      if (allowedHosts.has(new URL(origin).host)) return true
+    } catch { /* ignora */ }
   }
+
+  // 3. Referer como último recurso
+  const referer = req.headers.get('referer')
+  if (referer) {
+    try {
+      if (allowedHosts.has(new URL(referer).host)) return true
+    } catch { /* ignora */ }
+  }
+
+  return false
 }
