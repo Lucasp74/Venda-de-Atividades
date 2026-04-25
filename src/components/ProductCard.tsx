@@ -36,7 +36,8 @@ type Props = {
 export default function ProductCard({ product, featured = false }: Props) {
   const style  = CATEGORY_STYLES[product.category] ?? CATEGORY_STYLES.alfabetizacao
   const cover  = typeof product.coverImage === 'object' ? product.coverImage : null
-  const imgSrc = cover?.url ?? null
+  // Usa a variante "card" (800×480, já recortada) — fallback para URL original
+  const imgSrc = (cover?.sizes as Record<string, { url?: string }> | undefined)?.card?.url ?? cover?.url ?? null
   const level  = LEVEL_LABELS[product.schoolLevel] ?? ''
 
   const priceFormatted = new Intl.NumberFormat('pt-BR', {
