@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
 
     // Consulta direta ao banco — sem inicializar o Payload CMS (~2.500ms economizados)
     const { rows } = await getPool().query<{ id: number; title: string; price: number; category: string }>(
-      `SELECT id, title, price, category FROM products WHERE id = $1 AND status = 'published' LIMIT 1`,
+      `SELECT id, title, price::float8 AS price, category FROM products WHERE id = $1 AND status = 'published' LIMIT 1`,
       [numericId],
     )
 
