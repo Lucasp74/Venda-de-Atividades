@@ -22,11 +22,11 @@ const nunito = Nunito({
 
 export const metadata: Metadata = {
   title: {
-    default:  'Prô Dani — Atividades Infantis',
+    default:  'Atividades de Alfabetização - Prô Dani',
     template: '%s | Prô Dani',
   },
   description:
-    'Atividades e e-books educativos criados com carinho para tornar o aprendizado das crianças mais colorido e divertido.',
+    'Atividades de alfabetização e consciência fonológica para professores da Educação Infantil ao Fundamental 1. PDFs prontos para imprimir. Download imediato.',
   keywords: ['atividades infantis', 'ebooks educativos', 'alfabetização', 'matemática infantil', 'professora Dani'],
   openGraph: {
     type:   'website',
