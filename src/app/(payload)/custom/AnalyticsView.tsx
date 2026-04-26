@@ -130,7 +130,7 @@ export default function AnalyticsView() {
     card:    { background: '#fff', borderRadius: 16, border: '1px solid #FFE0EC', padding: '20px 24px', marginBottom: 24 } as React.CSSProperties,
     row:     { display: 'flex', flexWrap: 'wrap' as const, gap: 12, alignItems: 'flex-end', marginBottom: 16 } as React.CSSProperties,
     label:   { fontSize: 12, fontWeight: 700, color: '#888', marginBottom: 4, display: 'block', textTransform: 'uppercase' as const, letterSpacing: '0.05em' } as React.CSSProperties,
-    input:   { padding: '8px 12px', border: '2px solid #FFE0EC', borderRadius: 8, fontSize: 13, color: '#2D2D2D', outline: 'none', fontFamily: 'Nunito, sans-serif' } as React.CSSProperties,
+    input:   { padding: '8px 12px', border: '2px solid #FFE0EC', borderRadius: 8, fontSize: 13, color: '#2D2D2D', background: '#fff', outline: 'none', fontFamily: 'Nunito, sans-serif' } as React.CSSProperties,
     select:  { padding: '8px 12px', border: '2px solid #FFE0EC', borderRadius: 8, fontSize: 13, color: '#2D2D2D', outline: 'none', fontFamily: 'Nunito, sans-serif', background: '#fff', minWidth: 180, cursor: 'pointer' } as React.CSSProperties,
     btnPrimary: { background: 'linear-gradient(135deg,#FF6B9D,#845EC2)', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Nunito, sans-serif' } as React.CSSProperties,
     btnPreset:  { background: '#FFF0F5', color: '#E0527F', border: '1px solid #FFE0EC', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Nunito, sans-serif' } as React.CSSProperties,
