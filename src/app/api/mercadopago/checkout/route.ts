@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPreference } from '@/lib/mercadopago'
-import { getPayload } from 'payload'
-import config from '@payload-config'
+import { getPool } from '@/lib/db'
 import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
 import { isAllowedOrigin } from '@/lib/allowed-origin'
 
@@ -23,25 +22,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Dados inválidos' }, { status: 400 })
     }
 
-    // Validate product exists
-    const payload = await getPayload({ config })
-    const product = await payload.findByID({ collection: 'products', id: productId })
-    if (!product || product.status !== 'published') {
+    const numericId = parseInt(productId, 10)
+    if (isNaN(numericId)) {
+      return NextResponse.json({ error: 'Produto inválido' }, { status: 400 })
+    }
+
+    // Consulta direta ao banco — sem inicializar o Payload CMS (~2.500ms economizados)
+    const { rows } = await getPool().query<{ id: number; title: string; price: number }>(
+      `SELECT id, title, price FROM products WHERE id = $1 AND status = 'published' LIMIT 1`,
+      [numericId],
+    )
+
+    if (!rows[0]) {
       return NextResponse.json({ error: 'Produto não encontrado' }, { status: 404 })
     }
 
+    const product = rows[0]
+
     const preference = await createPreference({
       productId,
-      productTitle,
-      price:       product.price,
+      productTitle: product.title,
+      price:        product.price,   // preço vem do banco — não do cliente (segurança)
       buyerEmail,
       buyerName,
     })
 
     return NextResponse.json({
-      init_point:      preference.init_point,
+      init_point:         preference.init_point,
       sandbox_init_point: preference.sandbox_init_point,
-      preference_id:   preference.id,
+      preference_id:      preference.id,
     })
   } catch (err) {
     console.error('[Checkout] Error:', err)

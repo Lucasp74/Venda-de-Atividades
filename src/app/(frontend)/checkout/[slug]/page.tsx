@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -8,7 +9,9 @@ import type { Product } from '@/payload-types'
 import CheckoutWrapper from '@/components/CheckoutWrapper'
 import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 
-async function getProduct(slug: string): Promise<Product | null> {
+// cache() deduplica chamadas com o mesmo slug na mesma requisição —
+// generateMetadata e CheckoutPage consultam o banco apenas uma vez.
+const getProduct = cache(async function (slug: string): Promise<Product | null> {
   try {
     const payload = await getPayload({ config })
     const { docs } = await payload.find({
@@ -25,7 +28,7 @@ async function getProduct(slug: string): Promise<Product | null> {
   } catch {
     return null
   }
-}
+})
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
