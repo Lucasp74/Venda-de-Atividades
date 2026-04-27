@@ -70,10 +70,34 @@ export const metadata: Metadata = {
   },
 }
 
+const organizationJsonLd = {
+  '@context':   'https://schema.org',
+  '@type':      'Organization',
+  name:         'Prô Dani',
+  url:          BASE_URL,
+  logo:         `${BASE_URL}/og-image.png`,
+  description:  'Plataforma de atividades pedagógicas digitais para professores da Educação Infantil ao Fundamental 1, especializada em alfabetização e consciência fonológica.',
+  founder: {
+    '@type': 'Person',
+    name:    'Daniela',
+    jobTitle:'Pedagoga',
+    url:     `${BASE_URL}/quem-sou-eu`,
+  },
+  sameAs: [`${BASE_URL}/quem-sou-eu`],
+}
+
 export default function FrontendLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${poppins.variable} ${nunito.variable}`}>
+      <head>
+        {/* llms.txt — indica às IAs onde encontrar o contexto do site */}
+        <link rel="llms" type="text/plain" href="/llms.txt" />
+      </head>
       <body className="font-body bg-surface-soft text-ink antialiased">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
         <Navbar />
         <main id="main-content" tabIndex={-1}>
           {children}

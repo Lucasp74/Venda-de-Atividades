@@ -100,6 +100,28 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const priceFormatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)
 
   const base     = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://prodani.com.br'
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type':    'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name:    `Como recebo "${product.title}" após a compra?`,
+        acceptedAnswer: { '@type': 'Answer', text: 'O link de download é enviado automaticamente para o seu e-mail assim que o pagamento é confirmado. O acesso ao PDF é imediato.' },
+      },
+      {
+        '@type': 'Question',
+        name:    'Esta atividade está pronta para imprimir?',
+        acceptedAnswer: { '@type': 'Answer', text: 'Sim. O material está em formato PDF tamanho A4, otimizado para impressão caseira ou em gráfica. Basta baixar e imprimir.' },
+      },
+      {
+        '@type': 'Question',
+        name:    'Quais formas de pagamento são aceitas?',
+        acceptedAnswer: { '@type': 'Answer', text: 'Aceitamos PIX (aprovação imediata), cartão de crédito em até 12x e boleto bancário, processados com segurança pelo Mercado Pago.' },
+      },
+    ],
+  }
+
   const jsonLd = {
     '@context':   'https://schema.org',
     '@type':      'Product',
@@ -129,6 +151,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
       {/* ── Barra de compra sticky no mobile ── */}

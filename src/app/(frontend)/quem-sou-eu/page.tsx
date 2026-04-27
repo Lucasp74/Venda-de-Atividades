@@ -65,9 +65,37 @@ const TAGS = [
   '💛 10+ anos de sala',
 ]
 
+const personJsonLd = {
+  '@context':   'https://schema.org',
+  '@type':      'Person',
+  name:         'Daniela',
+  alternateName:'Prô Dani',
+  jobTitle:     'Pedagoga',
+  description:  'Pedagoga com mais de 10 anos de experiência em sala de aula, especializada em alfabetização e criação de materiais pedagógicos para Educação Infantil e Fundamental 1.',
+  url:          `${process.env.NEXT_PUBLIC_BASE_URL ?? 'https://prodanitezolin.com.br'}/quem-sou-eu`,
+  image:        `${process.env.NEXT_PUBLIC_BASE_URL ?? 'https://prodanitezolin.com.br'}/dani-profile.jpg`,
+  worksFor: {
+    '@type': 'Organization',
+    name:    'Prô Dani',
+    url:     process.env.NEXT_PUBLIC_BASE_URL ?? 'https://prodanitezolin.com.br',
+  },
+  knowsAbout: [
+    'Alfabetização',
+    'Consciência Fonológica',
+    'Educação Infantil',
+    'Fundamental 1',
+    'Materiais Pedagógicos',
+    'BNCC',
+  ],
+}
+
 export default function QuemSouEuPage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+      />
       {/* ── HERO ABOUT ── */}
       <section className="bg-gradient-to-br from-primary-50 via-white to-purple-50 py-10 md:py-24" aria-labelledby="about-heading">
         <div className="container-main">

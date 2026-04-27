@@ -10,8 +10,8 @@ import type { Product } from '@/payload-types'
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: 'Prô Dani — Atividades Infantis',
-  description: 'E-books e atividades educativas criados com carinho para tornar o aprendizado mais colorido e divertido.',
+  title:       'Atividades de Alfabetização - Prô Dani',
+  description: 'Atividades de alfabetização e consciência fonológica para professores da Educação Infantil ao Fundamental 1. PDFs prontos para imprimir. Download imediato.',
 }
 
 const getFeaturedProducts = unstable_cache(
@@ -215,6 +215,75 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      {/* ── FAQ ── */}
+      {(() => {
+        const faqs = [
+          {
+            q: 'Para qual faixa etária são as atividades?',
+            a: 'As atividades atendem desde a Educação Infantil (0 a 5 anos) até o Fundamental 1 (1º ao 5º ano). Cada atividade indica claramente o nível de ensino recomendado.',
+          },
+          {
+            q: 'Qual atividade usar para ensinar vogais e consciência fonológica?',
+            a: 'Temos uma categoria completa de Alfabetização e Consciência Fonológica com atividades específicas para vogais, sílabas, rimas e fonemas, indicadas para Educação Infantil e 1º ano do Fundamental.',
+          },
+          {
+            q: 'Como recebo o material após a compra?',
+            a: 'Após a confirmação do pagamento, o link de download é enviado automaticamente para o seu e-mail. O acesso é imediato — não precisa esperar.',
+          },
+          {
+            q: 'As atividades são prontas para imprimir?',
+            a: 'Sim! Todos os materiais estão em formato PDF tamanho A4, otimizados para impressão caseira ou em gráfica. Basta baixar e imprimir.',
+          },
+          {
+            q: 'As atividades seguem a BNCC?',
+            a: 'Sim. Os materiais são desenvolvidos com embasamento nas diretrizes da Base Nacional Comum Curricular (BNCC), respeitando as fases de desenvolvimento infantil.',
+          },
+          {
+            q: 'Quais formas de pagamento são aceitas?',
+            a: 'Aceitamos PIX (aprovação imediata), cartão de crédito em até 12x e boleto bancário, todos processados com segurança pelo Mercado Pago.',
+          },
+        ]
+        const faqJsonLd = {
+          '@context':   'https://schema.org',
+          '@type':      'FAQPage',
+          mainEntity:   faqs.map(({ q, a }) => ({
+            '@type':          'Question',
+            name:             q,
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text:    a,
+            },
+          })),
+        }
+        return (
+          <section className="py-12 md:py-20" aria-labelledby="faq-heading">
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+            />
+            <div className="container-main max-w-3xl">
+              <h2 id="faq-heading" className="font-heading text-h3 md:text-h2 text-center text-ink mb-2">
+                Dúvidas frequentes
+              </h2>
+              <p className="text-ink-muted text-body text-center mb-10">
+                Tudo o que você precisa saber antes de comprar
+              </p>
+              <div className="space-y-4">
+                {faqs.map(({ q, a }) => (
+                  <details key={q} className="bg-white rounded-2xl border-2 border-primary-100 group">
+                    <summary className="flex items-center justify-between gap-4 px-6 py-4 cursor-pointer font-heading font-700 text-body text-ink list-none">
+                      {q}
+                      <span className="flex-shrink-0 text-primary text-xl group-open:rotate-45 transition-transform duration-200">+</span>
+                    </summary>
+                    <p className="px-6 pb-5 text-ink-muted text-body-sm leading-relaxed">{a}</p>
+                  </details>
+                ))}
+              </div>
+            </div>
+          </section>
+        )
+      })()}
 
       {/* ── HOW IT WORKS ── */}
       <section className="py-12 md:py-20 bg-primary-50" aria-labelledby="howto-heading">
