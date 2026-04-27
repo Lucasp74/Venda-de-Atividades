@@ -7,7 +7,7 @@ import { isAllowedOrigin } from '@/lib/allowed-origin'
 const limiter = rateLimit({ interval: 60_000, limit: 10 })
 
 export async function POST(req: NextRequest) {
-  const rl = limiter(getClientIp(req))
+  const rl = await limiter(getClientIp(req))
   if (!rl.success) return rateLimitResponse(rl)
 
   if (!isAllowedOrigin(req)) {

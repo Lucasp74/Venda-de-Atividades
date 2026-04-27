@@ -17,6 +17,7 @@
     "@payloadcms/next": "3.33.0",
     "@payloadcms/richtext-lexical": "3.33.0",
     "@payloadcms/storage-vercel-blob": "3.33.0",
+    "@vercel/kv": "^3.0.0",
     "graphql": "16.8.1",
     "mercadopago": "^2.0.15",
     "next": "^15.2.3",

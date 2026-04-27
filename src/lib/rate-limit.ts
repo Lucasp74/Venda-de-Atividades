@@ -1,13 +1,20 @@
 /**
- * Rate Limiter in-memory para API routes do Next.js.
+ * ─────────────────────────────────────────────────────────────
+ *  Rate Limiter — Vercel KV (Upstash Redis) com fallback in-memory
+ * ─────────────────────────────────────────────────────────────
  *
- * Usa sliding window por IP. Entradas expiradas são removidas
- * automaticamente para evitar vazamento de memória.
+ *  Em produção (Vercel) usa o KV compartilhado entre todas as
+ *  instâncias — garante que o bloqueio por IP funcione de verdade.
+ *
+ *  Em desenvolvimento local (sem KV_REST_API_URL), cai no
+ *  contador in-memory automaticamente — sem configuração extra.
+ *
+ *  Algoritmo: fixed window por IP.
+ *  Chave Redis: rl:{ip}:{janela}  (ex: rl:177.x.x.x:28567)
+ * ─────────────────────────────────────────────────────────────
  */
 
-type RateLimitEntry = {
-  timestamps: number[]
-}
+import { kv } from '@vercel/kv'
 
 type RateLimitConfig = {
   /** Janela de tempo em milissegundos (padrão: 60 000 = 1 min) */
@@ -16,90 +23,95 @@ type RateLimitConfig = {
   limit: number
 }
 
-type RateLimitResult = {
-  success: boolean
-  /** Requisições restantes na janela atual */
+export type RateLimitResult = {
+  success:   boolean
   remaining: number
-  /** Timestamp (ms) de quando a janela reseta para a entrada mais antiga */
-  reset: number
+  reset:     number  // timestamp ms quando a janela expira
 }
 
-const CLEANUP_INTERVAL = 5 * 60_000 // limpa entradas expiradas a cada 5 min
+// ── Fallback in-memory (desenvolvimento local) ────────────────
+type MemEntry = { timestamps: number[] }
+const memStore = new Map<string, MemEntry>()
 
+function memCheck(ip: string, interval: number, limit: number): RateLimitResult {
+  const now    = Date.now()
+  const cutoff = now - interval
+  const entry  = memStore.get(ip) ?? { timestamps: [] }
+
+  entry.timestamps = entry.timestamps.filter(t => t > cutoff)
+
+  if (entry.timestamps.length >= limit) {
+    return { success: false, remaining: 0, reset: entry.timestamps[0] + interval }
+  }
+
+  entry.timestamps.push(now)
+  memStore.set(ip, entry)
+
+  return {
+    success:   true,
+    remaining: limit - entry.timestamps.length,
+    reset:     entry.timestamps[0] + interval,
+  }
+}
+
+// ── Rate limiter principal ────────────────────────────────────
 export function rateLimit({ interval = 60_000, limit }: RateLimitConfig) {
-  const store = new Map<string, RateLimitEntry>()
-  let lastCleanup = Date.now()
-
-  function cleanup(now: number) {
-    if (now - lastCleanup < CLEANUP_INTERVAL) return
-    lastCleanup = now
-    const cutoff = now - interval
-
-    for (const [key, entry] of store) {
-      entry.timestamps = entry.timestamps.filter((t) => t > cutoff)
-      if (entry.timestamps.length === 0) store.delete(key)
+  return async function check(ip: string): Promise<RateLimitResult> {
+    // Sem KV configurado → fallback in-memory (dev local)
+    if (!process.env.KV_REST_API_URL) {
+      return memCheck(ip, interval, limit)
     }
-  }
 
-  return function check(key: string): RateLimitResult {
-    const now = Date.now()
-    cleanup(now)
+    try {
+      // Chave por janela fixa: muda a cada `interval` ms
+      const window = Math.floor(Date.now() / interval)
+      const key    = `rl:${ip}:${window}`
+      const ttlSec = Math.ceil(interval / 1000) + 1
 
-    const cutoff = now - interval
-    const entry = store.get(key) ?? { timestamps: [] }
-
-    // Remove timestamps fora da janela
-    entry.timestamps = entry.timestamps.filter((t) => t > cutoff)
-
-    if (entry.timestamps.length >= limit) {
-      const oldestInWindow = entry.timestamps[0]
-      return {
-        success: false,
-        remaining: 0,
-        reset: oldestInWindow + interval,
+      // INCR atômico — seguro contra race conditions
+      const count = await kv.incr(key)
+      if (count === 1) {
+        // Primeira requisição da janela — define expiração
+        await kv.expire(key, ttlSec)
       }
-    }
 
-    entry.timestamps.push(now)
-    store.set(key, entry)
-
-    return {
-      success: true,
-      remaining: limit - entry.timestamps.length,
-      reset: entry.timestamps[0] + interval,
+      const windowStart = window * interval
+      return {
+        success:   count <= limit,
+        remaining: Math.max(0, limit - count),
+        reset:     windowStart + interval,
+      }
+    } catch {
+      // Falha no KV → permite a requisição (fail open) para não bloquear clientes
+      console.warn('[RateLimit] KV indisponível — permitindo requisição')
+      return { success: true, remaining: 1, reset: Date.now() + interval }
     }
   }
 }
 
-/**
- * Extrai o IP real da requisição (considera proxies como Vercel/Cloudflare).
- */
-export function getClientIp(req: Request): string {
-  const headers = req.headers
+// ── Helpers ───────────────────────────────────────────────────
 
-  // Vercel / Cloudflare / proxies comuns
-  const forwarded = headers.get('x-forwarded-for')
+/** Extrai o IP real da requisição (considera proxies Vercel/Cloudflare) */
+export function getClientIp(req: Request): string {
+  const forwarded = req.headers.get('x-forwarded-for')
   if (forwarded) return forwarded.split(',')[0].trim()
 
-  const realIp = headers.get('x-real-ip')
+  const realIp = req.headers.get('x-real-ip')
   if (realIp) return realIp.trim()
 
   return '127.0.0.1'
 }
 
-/**
- * Resposta padrão 429 com headers de rate limit.
- */
+/** Resposta padrão 429 com headers de rate limit */
 export function rateLimitResponse(result: RateLimitResult) {
   const retryAfter = Math.ceil((result.reset - Date.now()) / 1000)
-
   return new Response(
     JSON.stringify({ error: 'Muitas requisições. Tente novamente em instantes.' }),
     {
       status: 429,
       headers: {
-        'Content-Type': 'application/json',
-        'Retry-After': String(Math.max(retryAfter, 1)),
+        'Content-Type':          'application/json',
+        'Retry-After':           String(Math.max(retryAfter, 1)),
         'X-RateLimit-Remaining': String(result.remaining),
       },
     },
