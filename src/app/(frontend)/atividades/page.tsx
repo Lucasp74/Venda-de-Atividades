@@ -13,8 +13,13 @@ import type { Product } from '@/payload-types'
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: 'Atividades',
-  description: 'Explore mais de 200 atividades e e-books educativos infantis. Alfabetização, Matemática, Artes, Ciências e muito mais.',
+  title:       'Atividades para Professores',
+  description: 'Explore atividades de alfabetização, consciência fonológica, matemática e muito mais. Materiais pedagógicos em PDF prontos para imprimir para Educação Infantil e Fundamental 1.',
+  openGraph: {
+    title:       'Atividades para Professores | Prô Dani',
+    description: 'Materiais pedagógicos em PDF prontos para imprimir. Alfabetização, matemática, consciência fonológica e mais.',
+    type:        'website',
+  },
 }
 
 const getProducts = unstable_cache(

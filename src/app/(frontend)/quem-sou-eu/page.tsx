@@ -7,8 +7,14 @@ import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 export const dynamic = 'force-static'
 
 export const metadata: Metadata = {
-  title: 'Quem Sou Eu',
-  description: 'Conheça a Prô Dani (Daniela), pedagoga apaixonada por criar atividades infantis que transformam o aprendizado.',
+  title:       'Quem Sou Eu',
+  description: 'Conheça a Prô Dani, pedagoga com mais de 10 anos de experiência criando atividades de alfabetização e materiais pedagógicos para professores da Educação Infantil ao Fundamental 1.',
+  openGraph: {
+    title:       'Quem é a Prô Dani?',
+    description: 'Pedagoga com mais de 10 anos de experiência criando atividades de alfabetização para professores.',
+    type:        'profile',
+    images:      [{ url: '/dani-profile.jpg', width: 800, height: 1000, alt: 'Foto da Prô Dani' }],
+  },
 }
 
 const VALUES = [

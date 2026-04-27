@@ -20,18 +20,53 @@ const nunito = Nunito({
   display:  'swap',
 })
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://prodani.com.br'
+
 export const metadata: Metadata = {
+  metadataBase: new URL(BASE_URL),
   title: {
     default:  'Atividades de Alfabetização - Prô Dani',
     template: '%s | Prô Dani',
   },
   description:
     'Atividades de alfabetização e consciência fonológica para professores da Educação Infantil ao Fundamental 1. PDFs prontos para imprimir. Download imediato.',
-  keywords: ['atividades infantis', 'ebooks educativos', 'alfabetização', 'matemática infantil', 'professora Dani'],
+  keywords: [
+    'atividades de alfabetização',
+    'atividades para professores',
+    'educação infantil',
+    'fundamental 1',
+    'consciência fonológica',
+    'atividades pedagógicas',
+    'material didático',
+    'atividades para imprimir',
+    'professora Dani',
+  ],
+  authors: [{ name: 'Prô Dani' }],
+  creator: 'Prô Dani',
   openGraph: {
-    type:   'website',
-    locale: 'pt_BR',
-    siteName: 'Prô Dani',
+    type:      'website',
+    locale:    'pt_BR',
+    siteName:  'Prô Dani',
+    url:       BASE_URL,
+    title:     'Atividades de Alfabetização - Prô Dani',
+    description:
+      'Atividades de alfabetização e consciência fonológica para professores da Educação Infantil ao Fundamental 1. PDFs prontos para imprimir.',
+    images: [{
+      url:    '/og-image.png',
+      width:  1200,
+      height: 630,
+      alt:    'Prô Dani — Atividades de Alfabetização',
+    }],
+  },
+  twitter: {
+    card:        'summary_large_image',
+    title:       'Atividades de Alfabetização - Prô Dani',
+    description: 'Atividades de alfabetização para professores da Educação Infantil ao Fundamental 1.',
+    images:      ['/og-image.png'],
+  },
+  robots: {
+    index:  true,
+    follow: true,
   },
 }
 

@@ -58,16 +58,33 @@ async function getProduct(slug: string): Promise<Product | null> {
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params
-  const product  = await getProduct(slug)
+  const { slug }  = await params
+  const product   = await getProduct(slug)
   if (!product) return { title: 'Atividade não encontrada' }
+
+  const base      = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://prodani.com.br'
+  const cover     = typeof product.coverImage === 'object' ? product.coverImage : null
+  const ogImage   = cover?.url
+    ? [{ url: cover.url, width: 800, height: 600, alt: product.title }]
+    : [{ url: '/og-image.png', width: 1200, height: 630, alt: product.title }]
+  const canonical = `${base}/atividades/${slug}`
+
   return {
     title:       product.title,
     description: product.description,
+    alternates:  { canonical },
     openGraph: {
       title:       product.title,
       description: product.description,
       type:        'website',
+      url:         canonical,
+      images:      ogImage,
+    },
+    twitter: {
+      card:        'summary_large_image',
+      title:       product.title,
+      description: product.description,
+      images:      ogImage.map(i => i.url),
     },
   }
 }
@@ -82,8 +99,38 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const catLabel   = CATEGORY_LABELS[product.category] ?? product.category
   const priceFormatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)
 
+  const base     = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://prodani.com.br'
+  const jsonLd = {
+    '@context':   'https://schema.org',
+    '@type':      'Product',
+    name:         product.title,
+    description:  product.description,
+    image:        imgSrc ?? `${base}/og-image.png`,
+    url:          `${base}/atividades/${product.slug}`,
+    brand: {
+      '@type': 'Brand',
+      name:    'Prô Dani',
+    },
+    offers: {
+      '@type':           'Offer',
+      price:             product.price.toFixed(2),
+      priceCurrency:     'BRL',
+      availability:      'https://schema.org/InStock',
+      url:               `${base}/checkout/${product.slug}`,
+      seller: {
+        '@type': 'Organization',
+        name:    'Prô Dani',
+      },
+    },
+  }
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       {/* ── Barra de compra sticky no mobile ── */}
       <div
         className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t-2 border-primary-100 px-4 py-3 flex items-center justify-between gap-3 md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.08)] safe-bottom"
