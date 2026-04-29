@@ -3,7 +3,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
 
-const EXPIRY_DAYS    = 7
+const EXPIRY_DAYS    = 3
 const DOWNLOAD_LIMIT = 5
 const limiter = rateLimit({ interval: 60_000, limit: 10 })
 

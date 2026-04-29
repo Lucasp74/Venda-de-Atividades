@@ -115,7 +115,7 @@ export async function sendDownloadEmail({
                       style="display:inline-block;background:linear-gradient(135deg,#FF6B9D,#845EC2);color:#ffffff;font-size:17px;font-weight:800;padding:18px 44px;border-radius:50px;text-decoration:none;box-shadow:0 6px 24px rgba(255,107,157,0.40);letter-spacing:0.2px;">
                       📥 &nbsp;Baixar Minha Atividade
                     </a>
-                    <p style="margin:20px 0 0;font-size:12px;color:#bbbbbb;">Link válido por <strong>7 dias</strong></p>
+                    <p style="margin:20px 0 0;font-size:12px;color:#bbbbbb;">Link válido por <strong>3 dias</strong></p>
                   </td>
                 </tr>
               </table>
