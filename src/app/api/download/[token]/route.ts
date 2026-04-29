@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getPayload } from 'payload'
-import config from '@payload-config'
+import { getPool } from '@/lib/db'
 import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
 
 const EXPIRY_DAYS    = 3
 const DOWNLOAD_LIMIT = 5
 const limiter = rateLimit({ interval: 60_000, limit: 10 })
+
+type OrderRow = {
+  id:              number
+  product_title:   string
+  download_sent_at: string | null
+  created_at:      string
+  download_count:  number
+  pdf_url:         string | null
+}
 
 export async function GET(
   _req: NextRequest,
@@ -21,34 +29,33 @@ export async function GET(
   }
 
   try {
-    const payload = await getPayload({ config })
+    // Consulta direta ao banco — sem inicializar o Payload CMS (~2500ms economizados)
+    const { rows } = await getPool().query<OrderRow>(
+      `SELECT
+         o.id,
+         o.product_title,
+         o.download_sent_at,
+         o.created_at,
+         o.download_count,
+         m.url AS pdf_url
+       FROM orders o
+       LEFT JOIN products p  ON p.id = o.product_id
+       LEFT JOIN media   m  ON m.id  = p.pdf_file_id
+       WHERE o.download_token = $1
+         AND o.status = 'approved'
+       LIMIT 1`,
+      [token],
+    )
 
-    const { docs } = await payload.find({
-      collection: 'orders',
-      where: {
-        and: [
-          { downloadToken: { equals: token  } },
-          { status:        { equals: 'approved' } },
-        ],
-      },
-      limit: 1,
-    })
-
-    const order = docs[0]
+    const order = rows[0]
     if (!order) {
       return new NextResponse('Link inválido ou expirado', { status: 404 })
     }
 
-    // Check expiry — usa downloadSentAt ou createdAt como fallback (nunca isenta de expiração)
-    const referenceDate = order.downloadSentAt
-      ? new Date(order.downloadSentAt)
-      : order.createdAt
-        ? new Date(order.createdAt as string)
-        : null
-
-    if (!referenceDate) {
-      return new NextResponse('Link inválido', { status: 410 })
-    }
+    // Verifica expiração
+    const referenceDate = order.download_sent_at
+      ? new Date(order.download_sent_at)
+      : new Date(order.created_at)
 
     const expiryDate = new Date(referenceDate)
     expiryDate.setDate(expiryDate.getDate() + EXPIRY_DAYS)
@@ -57,40 +64,32 @@ export async function GET(
     }
 
     // Verifica limite de downloads
-    const downloadCount = (order.downloadCount as number | null) ?? 0
-    if (downloadCount >= DOWNLOAD_LIMIT) {
+    if (order.download_count >= DOWNLOAD_LIMIT) {
       return new NextResponse('Limite de downloads atingido. Entre em contato para suporte.', { status: 403 })
     }
 
-    // Incrementa contador antes de servir o arquivo
-    await payload.update({
-      collection: 'orders',
-      id: order.id,
-      data: { downloadCount: downloadCount + 1 },
-    })
-
-    // Get product & PDF
-    const product = typeof order.product === 'object' ? order.product : null
-    if (!product) {
-      return new NextResponse('Produto não encontrado', { status: 404 })
-    }
-
-    const pdfFile = typeof product.pdfFile === 'object' ? product.pdfFile : null
-    if (!pdfFile?.url) {
+    if (!order.pdf_url) {
       return new NextResponse('Arquivo não encontrado', { status: 404 })
     }
 
-    // Faz proxy do PDF para forçar download (Content-Disposition: attachment)
-    const pdfUrl = pdfFile.url.startsWith('http')
-      ? pdfFile.url
-      : `${process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'}${pdfFile.url}`
+    // Incrementa contador e busca PDF em paralelo
+    const pdfUrl = order.pdf_url.startsWith('http')
+      ? order.pdf_url
+      : `${process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'}${order.pdf_url}`
 
-    const pdfResponse = await fetch(pdfUrl)
+    const [, pdfResponse] = await Promise.all([
+      getPool().query(
+        `UPDATE orders SET download_count = download_count + 1, updated_at = NOW() WHERE id = $1`,
+        [order.id],
+      ),
+      fetch(pdfUrl),
+    ])
+
     if (!pdfResponse.ok) {
       return new NextResponse('Arquivo não encontrado', { status: 404 })
     }
 
-    const filename = `${(order.productTitle as string | null ?? 'atividade').replace(/[^a-zA-Z0-9À-ú\s-]/g, '').trim()}.pdf`
+    const filename = `${(order.product_title ?? 'atividade').replace(/[^a-zA-Z0-9À-ú\s-]/g, '').trim()}.pdf`
 
     return new NextResponse(pdfResponse.body, {
       headers: {
