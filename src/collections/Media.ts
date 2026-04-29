@@ -33,7 +33,7 @@ export const Media: CollectionConfig = {
     ],
   },
   upload: {
-    staticDir: 'public/media',
+    disableLocalStorage: true,
     imageSizes: [
       { name: 'thumbnail', width: 400, height: 240, crop: 'center' },
       { name: 'card',      width: 800, height: 480, crop: 'center' },
