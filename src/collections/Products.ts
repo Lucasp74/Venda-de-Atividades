@@ -27,17 +27,17 @@ export const Products: CollectionConfig = {
   access: { read: () => true },
   hooks: {
     beforeDelete: [
-      async ({ id }) => {
-        const { getPool } = await import('@/lib/db')
-        const { rows } = await getPool().query<{ count: string }>(
-          `SELECT COUNT(*) AS count FROM orders WHERE product_id = $1`,
-          [id],
-        )
-        const count = parseInt(rows[0]?.count ?? '0', 10)
-        if (count > 0) {
+      async ({ id, req }) => {
+        const { totalDocs } = await req.payload.find({
+          collection: 'orders',
+          where:      { product: { equals: id } },
+          limit:      0,
+          depth:      0,
+        })
+        if (totalDocs > 0) {
           throw new Error(
-            `⚠️ Exclusão bloqueada — esta atividade possui ${count} venda(s) registrada(s) e não pode ser excluída. ` +
-            `Para removê-la do site sem perder o histórico, altere o Status para "Arquivado".`
+            `⚠️ Exclusão bloqueada — esta atividade possui ${totalDocs} venda(s) registrada(s) e não pode ser excluída. ` +
+            `Para removê-la do site sem perder o histórico, altere o Status para "Arquivado".`,
           )
         }
       },
