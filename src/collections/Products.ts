@@ -1,5 +1,4 @@
 import type { CollectionConfig } from 'payload'
-import { getPool } from '@/lib/db'
 
 export const CATEGORIES = [
   { label: 'Alfabetização e Leitura',         value: 'alfabetizacao'     },
@@ -29,6 +28,7 @@ export const Products: CollectionConfig = {
   hooks: {
     beforeDelete: [
       async ({ id }) => {
+        const { getPool } = await import('@/lib/db')
         const { rows } = await getPool().query<{ count: string }>(
           `SELECT COUNT(*) AS count FROM orders WHERE product_id = $1`,
           [id],
