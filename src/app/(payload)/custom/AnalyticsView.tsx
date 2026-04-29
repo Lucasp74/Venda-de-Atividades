@@ -61,7 +61,9 @@ function CustomTooltip({ active, payload, label }: {
       boxShadow: '0 4px 20px rgba(255,107,157,0.15)',
       fontFamily: 'Nunito, sans-serif',
     }}>
-      <p style={{ fontWeight: 700, marginBottom: 4, color: '#2D2D2D' }}>{label}</p>
+      <p style={{ fontWeight: 700, marginBottom: 4, color: '#2D2D2D' }}>
+        {label ? (() => { const [y,m,d] = label.split('-'); return `${d}/${m}/${y}` })() : ''}
+      </p>
       {payload.map((p) => (
         <p key={p.name} style={{ margin: '2px 0', fontSize: 13, color: '#555' }}>
           {p.name === 'count'

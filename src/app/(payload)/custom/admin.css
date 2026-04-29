@@ -375,44 +375,64 @@
      BOTÕES
   ══════════════════════════════ */
   .btn {
-    border-radius: 10px !important;
+    border-radius: 50px !important;
     font-family: 'Nunito', sans-serif !important;
     font-weight: 700 !important;
+    font-size: 13px !important;
+    padding: 10px 22px !important;
     transition: all 0.2s ease !important;
+    letter-spacing: 0.02em !important;
   }
 
-  /* Botão primário (Save) */
+  /* Botão primário (Salvar, Criar) */
   .btn--style-primary,
   .btn--icon-style-with-border.btn--style-primary {
     background: linear-gradient(135deg, #FF6B9D 0%, #E0527F 100%) !important;
     border: none !important;
     color: #FFFFFF !important;
-    box-shadow: 0 4px 15px rgba(255, 107, 157, 0.35) !important;
+    box-shadow: 0 4px 15px rgba(255, 107, 157, 0.40) !important;
   }
 
   .btn--style-primary:hover {
     background: linear-gradient(135deg, #E0527F 0%, #C23A64 100%) !important;
-    box-shadow: 0 6px 20px rgba(255, 107, 157, 0.45) !important;
-    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 22px rgba(255, 107, 157, 0.55) !important;
+    transform: translateY(-2px) !important;
   }
 
   /* Botão secundário */
   .btn--style-secondary {
     background: #FFFFFF !important;
-    border: 2px solid #FFD6E4 !important;
+    border: 2px solid #FF6B9D !important;
     color: #E0527F !important;
+    box-shadow: 0 2px 8px rgba(255, 107, 157, 0.15) !important;
   }
 
   .btn--style-secondary:hover {
     background: #FFF0F5 !important;
-    border-color: #FF6B9D !important;
+    border-color: #E0527F !important;
+    box-shadow: 0 4px 14px rgba(255, 107, 157, 0.25) !important;
+    transform: translateY(-1px) !important;
   }
 
   /* Botão de delete → vermelho */
   .btn--style-error {
     background: #FFF0F0 !important;
-    border: 2px solid #FFCCCC !important;
+    border: 2px solid #FFAAAA !important;
     color: #C03030 !important;
+    box-shadow: 0 2px 8px rgba(192, 48, 48, 0.12) !important;
+  }
+
+  .btn--style-error:hover {
+    background: #FFE0E0 !important;
+    border-color: #C03030 !important;
+    transform: translateY(-1px) !important;
+  }
+
+  /* Botão "Criar Novo" na listagem */
+  .list-controls__controls .btn,
+  .collection-list__controls .btn {
+    padding: 10px 24px !important;
+    font-size: 14px !important;
   }
 
   /* ══════════════════════════════
