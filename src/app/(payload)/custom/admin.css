@@ -483,6 +483,16 @@
     background: #FFF0F5 !important;
   }
 
+  /* Nome do arquivo na listagem de Mídias */
+  .table td a,
+  .table td span,
+  .table td p,
+  .file-meta__filename,
+  .upload-file__filename,
+  .thumbnail__filename {
+    color: #2D2D2D !important;
+  }
+
   /* ══════════════════════════════
      PAGINAÇÃO
   ══════════════════════════════ */

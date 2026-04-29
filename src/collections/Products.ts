@@ -164,5 +164,14 @@ export const Products: CollectionConfig = {
       label: 'Tags',
       fields: [{ name: 'tag', type: 'text', label: 'Tag' }],
     },
+    {
+      name: 'saveButtonBottom',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '@/app/(payload)/custom/SaveButtonBottom',
+        },
+      },
+    },
   ],
 }
