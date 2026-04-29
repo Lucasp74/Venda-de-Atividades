@@ -7,12 +7,12 @@ const DOWNLOAD_LIMIT = 5
 const limiter = rateLimit({ interval: 60_000, limit: 10 })
 
 type OrderRow = {
-  id:              number
-  product_title:   string
+  id:               number
+  product_id:       number
+  product_title:    string
   download_sent_at: string | null
-  created_at:      string
-  download_count:  number
-  pdf_url:         string | null
+  created_at:       string
+  download_count:   number
 }
 
 export async function GET(
@@ -31,18 +31,9 @@ export async function GET(
   try {
     // Consulta direta ao banco — sem inicializar o Payload CMS (~2500ms economizados)
     const { rows } = await getPool().query<OrderRow>(
-      `SELECT
-         o.id,
-         o.product_title,
-         o.download_sent_at,
-         o.created_at,
-         o.download_count,
-         m.url AS pdf_url
-       FROM orders o
-       LEFT JOIN products p  ON p.id = o.product_id
-       LEFT JOIN media   m  ON m.id  = p.pdf_file_id
-       WHERE o.download_token = $1
-         AND o.status = 'approved'
+      `SELECT id, product_id, product_title, download_sent_at, created_at, download_count
+       FROM orders
+       WHERE download_token = $1 AND status = 'approved'
        LIMIT 1`,
       [token],
     )
@@ -68,14 +59,29 @@ export async function GET(
       return new NextResponse('Limite de downloads atingido. Entre em contato para suporte.', { status: 403 })
     }
 
-    if (!order.pdf_url) {
+    // Busca URL do PDF via produto → media (queries simples sem JOIN)
+    const { rows: productRows } = await getPool().query<{ pdf_file_id: number | null }>(
+      `SELECT pdf_file_id FROM products WHERE id = $1 LIMIT 1`,
+      [order.product_id],
+    )
+    const pdfFileId = productRows[0]?.pdf_file_id
+    if (!pdfFileId) {
+      return new NextResponse('Arquivo não encontrado', { status: 404 })
+    }
+
+    const { rows: mediaRows } = await getPool().query<{ url: string }>(
+      `SELECT url FROM media WHERE id = $1 LIMIT 1`,
+      [pdfFileId],
+    )
+    const pdfRawUrl = mediaRows[0]?.url
+    if (!pdfRawUrl) {
       return new NextResponse('Arquivo não encontrado', { status: 404 })
     }
 
     // Incrementa contador e busca PDF em paralelo
-    const pdfUrl = order.pdf_url.startsWith('http')
-      ? order.pdf_url
-      : `${process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'}${order.pdf_url}`
+    const pdfUrl = pdfRawUrl.startsWith('http')
+      ? pdfRawUrl
+      : `${process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'}${pdfRawUrl}`
 
     const [, pdfResponse] = await Promise.all([
       getPool().query(
