@@ -63,6 +63,12 @@ export function rateLimit({ interval = 60_000, limit }: RateLimitConfig) {
     }
 
     try {
+      // IPs bloqueados manualmente no Upstash (chave permanente: blocked:{ip})
+      const isBlocked = await kv.exists(`blocked:${ip}`)
+      if (isBlocked) {
+        return { success: false, remaining: 0, reset: Date.now() + interval }
+      }
+
       // Chave por janela fixa: muda a cada `interval` ms
       const window = Math.floor(Date.now() / interval)
       const key    = `rl:${ip}:${window}`

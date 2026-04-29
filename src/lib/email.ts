@@ -49,7 +49,7 @@ export async function sendDownloadEmail({
     : '#'
 
   const { data, error } = await withRetry(() => getResend().emails.send({
-    from:    `Prô Dani <noreply@${process.env.EMAIL_DOMAIN ?? 'profdani.com.br'}>`,
+    from:    `Prô Dani <${process.env.EMAIL_FROM ?? 'contato@prodanitezolin.com.br'}>`,
     to,
     subject: `Seu download está pronto — ${safeTitle}`,
     html: `
