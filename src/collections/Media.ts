@@ -1,5 +1,4 @@
 import type { CollectionConfig } from 'payload'
-import { put } from '@vercel/blob'
 
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -22,6 +21,7 @@ export const Media: CollectionConfig = {
         if (!file?.data || !token) return data
 
         try {
+          const { put } = await import('@vercel/blob')
           const blob = await put(file.name, file.data, { access: 'public', token })
           data.url = blob.url
         } catch (err) {
