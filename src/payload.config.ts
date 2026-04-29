@@ -1,6 +1,5 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { sqliteAdapter }   from '@payloadcms/db-sqlite'
-import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 import { lexicalEditor }    from '@payloadcms/richtext-lexical'
 import { pt }               from '@payloadcms/translations/languages/pt'
 import path   from 'path'
@@ -82,16 +81,8 @@ export default buildConfig({
         },
       }),
 
-  // Vercel Blob Storage em produção, sistema de arquivos local em desenvolvimento
-  plugins: isProd && process.env.BLOB_READ_WRITE_TOKEN
-    ? [
-        vercelBlobStorage({
-          enabled:     true,
-          collections: { media: true },
-          token:       process.env.BLOB_READ_WRITE_TOKEN,
-        }),
-      ]
-    : [],
+  // Upload para Vercel Blob feito via hook beforeChange na coleção Media
+  plugins: [],
 
   sharp,
   upload: {
