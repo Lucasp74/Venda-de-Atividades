@@ -80,12 +80,25 @@ export async function GET(
       return new NextResponse('Arquivo não encontrado', { status: 404 })
     }
 
-    // Redirect to the PDF file (or proxy it)
+    // Faz proxy do PDF para forçar download (Content-Disposition: attachment)
     const pdfUrl = pdfFile.url.startsWith('http')
       ? pdfFile.url
       : `${process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'}${pdfFile.url}`
 
-    return NextResponse.redirect(pdfUrl, { status: 302 })
+    const pdfResponse = await fetch(pdfUrl)
+    if (!pdfResponse.ok) {
+      return new NextResponse('Arquivo não encontrado', { status: 404 })
+    }
+
+    const filename = `${(order.productTitle as string | null ?? 'atividade').replace(/[^a-zA-Z0-9À-ú\s-]/g, '').trim()}.pdf`
+
+    return new NextResponse(pdfResponse.body, {
+      headers: {
+        'Content-Type':        'application/pdf',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Cache-Control':       'no-store',
+      },
+    })
   } catch (err) {
     console.error('[Download] Error:', err)
     return new NextResponse('Erro interno', { status: 500 })

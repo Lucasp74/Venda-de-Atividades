@@ -42,7 +42,7 @@ export async function sendDownloadEmail({
   productTitle: string
   downloadUrl:  string
 }) {
-  const safeName     = escapeHtml(buyerName || 'professora')
+  const safeName     = escapeHtml(buyerName || 'professor(a)')
   const safeTitle    = escapeHtml(productTitle)
   const safeUrl      = downloadUrl.startsWith('https://') || downloadUrl.startsWith('http://localhost')
     ? downloadUrl
