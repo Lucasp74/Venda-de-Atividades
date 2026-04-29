@@ -11,7 +11,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ token: string }> },
 ) {
-  const rl = limiter(getClientIp(_req))
+  const rl = await limiter(getClientIp(_req))
   if (!rl.success) return rateLimitResponse(rl)
 
   const { token } = await params
