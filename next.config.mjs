@@ -32,9 +32,8 @@ const nextConfig = {
 
     // Domínios autorizados para imagens remotas
     remotePatterns: [
-      // Vercel Blob Storage (produção)
-      { protocol: 'https', hostname: '*.vercel-storage.com' },
-      { protocol: 'https', hostname: 'blob.vercel-storage.com' },
+      // Vercel Blob Storage (produção) — formato: {bucket}.public.blob.vercel-storage.com
+      { protocol: 'https', hostname: '*.public.blob.vercel-storage.com' },
       // Localhost (desenvolvimento — Payload serve as mídias localmente)
       { protocol: 'http',  hostname: 'localhost' },
     ],
