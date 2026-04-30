@@ -36,8 +36,8 @@ type Props = {
 export default function ProductCard({ product, featured = false }: Props) {
   const style  = CATEGORY_STYLES[product.category] ?? CATEGORY_STYLES.alfabetizacao
   const cover  = typeof product.coverImage === 'object' ? product.coverImage : null
-  // Usa a URL original do Vercel Blob (variantes de tamanho não são geradas com disableLocalStorage)
-  const imgSrc = cover?.url ?? null
+  // blobUrl é o campo customizado imune à sobrescrita do Payload; url é fallback
+  const imgSrc = (cover as any)?.blobUrl ?? cover?.url ?? null
   const level  = LEVEL_LABELS[product.schoolLevel] ?? ''
 
   const priceFormatted = new Intl.NumberFormat('pt-BR', {

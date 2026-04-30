@@ -95,7 +95,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   if (!product) notFound()
 
   const cover      = typeof product.coverImage === 'object' ? product.coverImage : null
-  const imgSrc     = cover?.url ?? null
+  const imgSrc     = (cover as any)?.blobUrl ?? cover?.url ?? null
   const catLabel   = CATEGORY_LABELS[product.category] ?? product.category
   const priceFormatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)
 

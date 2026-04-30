@@ -14,7 +14,6 @@ export const Media: CollectionConfig = {
   hooks: {
     beforeChange: [
       async ({ data, req, operation }) => {
-        // Só faz upload no create e quando há arquivo e token configurado
         if (operation !== 'create') return data
         const file  = (req as unknown as { file?: { name: string; data: Buffer; mimetype: string } }).file
         const token = process.env.BLOB_READ_WRITE_TOKEN
@@ -23,12 +22,24 @@ export const Media: CollectionConfig = {
         try {
           const { put } = await import('@vercel/blob')
           const blob = await put(file.name, file.data, { access: 'public', token })
-          data.url = blob.url
+          // Salva em ambos: url (campo nativo do Payload) e blobUrl (campo customizado)
+          data.url     = blob.url
+          data.blobUrl = blob.url
         } catch (err) {
           console.error('[Media] Falha ao enviar para Vercel Blob:', err)
         }
 
         return data
+      },
+    ],
+    afterRead: [
+      ({ doc }) => {
+        // Payload v3 sobrescreve o campo url com /api/media/file/[filename].
+        // Usamos blobUrl (que nunca é alterado) para restaurar a URL correta.
+        if (doc.blobUrl && typeof doc.blobUrl === 'string') {
+          doc.url = doc.blobUrl
+        }
+        return doc
       },
     ],
   },
@@ -43,6 +54,11 @@ export const Media: CollectionConfig = {
       name: 'alt',
       type: 'text',
       label: 'Texto alternativo',
+    },
+    {
+      name: 'blobUrl',
+      type: 'text',
+      admin: { hidden: true, readOnly: true },
     },
   ],
 }
