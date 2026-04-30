@@ -8,8 +8,8 @@ import type { Product } from '@/payload-types'
 import BuyButton from '@/components/BuyButton'
 import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 
-// ── ISR: revalida cada página de produto a cada 1 hora
-export const revalidate = 3600
+// ── ISR: revalida cada página de produto a cada 30 minutos
+export const revalidate = 1800
 
 const CATEGORY_LABELS: Record<string, string> = {
   alfabetizacao: 'Alfabetização e Leitura',
