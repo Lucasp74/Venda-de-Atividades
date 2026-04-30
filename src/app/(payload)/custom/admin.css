@@ -514,6 +514,81 @@
   }
 
   /* ══════════════════════════════
+     BARRA DE SELEÇÃO EM MASSA (Editar, Excluir ao selecionar itens)
+  ══════════════════════════════ */
+
+  /* Container da barra de seleção */
+  .list-selection,
+  .selection-actions,
+  .bulk-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+  }
+
+  /* Todos os botões/links dentro da barra de seleção */
+  .list-selection button,
+  .list-selection a,
+  .list-selection__action,
+  .list-selection__button,
+  .selection-actions button,
+  .selection-actions a,
+  .bulk-actions button,
+  .bulk-actions a {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 6px 16px !important;
+    border-radius: 50px !important;
+    font-family: 'Nunito', sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+    border: 2px solid #FFD6E4 !important;
+    background: #FFF0F5 !important;
+    color: #E0527F !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+  }
+
+  .list-selection button:hover,
+  .list-selection a:hover,
+  .list-selection__action:hover,
+  .list-selection__button:hover,
+  .selection-actions button:hover,
+  .selection-actions a:hover,
+  .bulk-actions button:hover,
+  .bulk-actions a:hover {
+    background: #FF6B9D !important;
+    border-color: #FF6B9D !important;
+    color: #FFFFFF !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(255, 107, 157, 0.30) !important;
+  }
+
+  /* Botão Excluir na seleção em massa */
+  .list-selection button[aria-label*="excluir" i],
+  .list-selection button[aria-label*="delete" i],
+  .list-selection__action--delete,
+  .list-selection__button--style-error {
+    border-color: #FFAAAA !important;
+    background: #FFF0F0 !important;
+    color: #C03030 !important;
+  }
+
+  .list-selection button[aria-label*="excluir" i]:hover,
+  .list-selection button[aria-label*="delete" i]:hover,
+  .list-selection__action--delete:hover,
+  .list-selection__button--style-error:hover {
+    background: #C03030 !important;
+    border-color: #C03030 !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 12px rgba(192, 48, 48, 0.25) !important;
+  }
+
+  /* ══════════════════════════════
      BOTÕES DE AÇÃO DA TABELA (Editar, Excluir, ...)
   ══════════════════════════════ */
 
