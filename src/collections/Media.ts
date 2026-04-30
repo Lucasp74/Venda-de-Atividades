@@ -34,11 +34,6 @@ export const Media: CollectionConfig = {
   },
   upload: {
     disableLocalStorage: true,
-    imageSizes: [
-      { name: 'thumbnail', width: 400, height: 240, crop: 'center' },
-      { name: 'card',      width: 800, height: 480, crop: 'center' },
-    ],
-    adminThumbnail: 'thumbnail',
     mimeTypes: ['image/*', 'application/pdf'],
     crop:       true,
     focalPoint: true,
