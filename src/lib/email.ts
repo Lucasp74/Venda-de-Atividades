@@ -142,7 +142,7 @@ export async function sendDownloadEmail({
           <!-- Footer -->
           <tr>
             <td style="background:#f8f8f8;padding:24px 40px;text-align:center;border-top:1px solid #FFE4EF;">
-              <p style="margin:0 0 8px;font-size:13px;color:#aaaaaa;">Dúvidas? Entre em contato pelo site <a href="https://prodanitezolin.com.br" style="color:#E91E8C;text-decoration:none;">prodanitezolin.com.br</a></p>
+              <p style="margin:0 0 8px;font-size:13px;color:#aaaaaa;">Este é um e-mail automático. Por favor, não responda.</p>
               <p style="margin:0;font-size:11px;color:#cccccc;">© ${year} Prô Dani · Atividades de Alfabetização</p>
             </td>
           </tr>
