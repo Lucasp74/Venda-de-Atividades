@@ -43,14 +43,30 @@ export const Products: CollectionConfig = {
       },
     ],
     beforeChange: [
-      ({ data }) => {
+      async ({ data, req, operation }) => {
         if (data.title && !data.slug) {
-          data.slug = data.title
+          const base = data.title
             .toLowerCase()
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '')
             .replace(/[^a-z0-9]+/g, '-')
             .replace(/(^-|-$)/g, '')
+
+          // Garante unicidade: se o slug j\u00e1 existe, adiciona sufixo -2, -3, etc.
+          let candidate = base
+          let counter   = 1
+          while (true) {
+            const { totalDocs } = await req.payload.find({
+              collection: 'products',
+              where:      { slug: { equals: candidate } },
+              limit:      0,
+              depth:      0,
+            })
+            if (totalDocs === 0) break
+            counter++
+            candidate = `${base}-${counter}`
+          }
+          data.slug = candidate
         }
         return data
       },
