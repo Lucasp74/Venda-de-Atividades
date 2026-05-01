@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "payload generate:types && payload generate:importMap && next build",
+    "build": "next build",
     "start": "next start",
     "postinstall": "node scripts/patch-payload.mjs",
     "generate:types": "payload generate:types",
