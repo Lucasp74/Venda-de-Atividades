@@ -4,19 +4,19 @@ import { lexicalEditor }    from '@payloadcms/richtext-lexical'
 import { pt }               from '@payloadcms/translations/languages/pt'
 import path   from 'path'
 import { buildConfig } from 'payload'
+import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
-import { Media    } from './collections/Media.ts'
-import { Orders   } from './collections/Orders.ts'
-import { Products } from './collections/Products.ts'
-import { Users    } from './collections/Users.ts'
+import { Media    } from './collections/Media'
+import { Orders   } from './collections/Orders'
+import { Products } from './collections/Products'
+import { Users    } from './collections/Users'
 
 // Usa PostgreSQL sempre que DATABASE_URL estiver definida (produção ou init local)
 const isProd = Boolean(process.env.DATABASE_URL?.startsWith('postgres'))
 
-// process.cwd() aponta para a raiz do projeto tanto em CJS quanto ESM,
-// evitando import.meta.url que causa conflito no tsx v4 + Node.js 22
-const dirname = path.resolve(process.cwd(), 'src')
+const filename = fileURLToPath(import.meta.url)
+const dirname  = path.dirname(filename)
 
 export default buildConfig({
   admin: {
