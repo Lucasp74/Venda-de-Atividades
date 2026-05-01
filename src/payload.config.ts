@@ -4,21 +4,19 @@ import { lexicalEditor }    from '@payloadcms/richtext-lexical'
 import { pt }               from '@payloadcms/translations/languages/pt'
 import path   from 'path'
 import { buildConfig } from 'payload'
-import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
-import { Media    } from './collections/Media.js'
-import { Orders   } from './collections/Orders.js'
-import { Products } from './collections/Products.js'
-import { Users    } from './collections/Users.js'
+import { Media    } from './collections/Media.ts'
+import { Orders   } from './collections/Orders.ts'
+import { Products } from './collections/Products.ts'
+import { Users    } from './collections/Users.ts'
 
 // Usa PostgreSQL sempre que DATABASE_URL estiver definida (produção ou init local)
-// Isso desacopla a seleção de adapter do NODE_ENV, permitindo rodar
-// o push de schema com NODE_ENV=development apontando para o Neon.
 const isProd = Boolean(process.env.DATABASE_URL?.startsWith('postgres'))
 
-const filename = fileURLToPath(import.meta.url)
-const dirname  = path.dirname(filename)
+// process.cwd() aponta para a raiz do projeto tanto em CJS quanto ESM,
+// evitando import.meta.url que causa conflito no tsx v4 + Node.js 22
+const dirname = path.resolve(process.cwd(), 'src')
 
 export default buildConfig({
   admin: {
