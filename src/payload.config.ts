@@ -7,10 +7,10 @@ import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
-import { Media    } from './collections/Media'
-import { Orders   } from './collections/Orders'
-import { Products } from './collections/Products'
-import { Users    } from './collections/Users'
+import { Media    } from './collections/Media.ts'
+import { Orders   } from './collections/Orders.ts'
+import { Products } from './collections/Products.ts'
+import { Users    } from './collections/Users.ts'
 
 // Usa PostgreSQL sempre que DATABASE_URL estiver definida (produção ou init local)
 // Isso desacopla a seleção de adapter do NODE_ENV, permitindo rodar
