@@ -4,7 +4,7 @@ import { getPool } from '@/lib/db'
 export const revalidate = 3600 // Regenera o sitemap a cada 1 hora
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://prodani.com.br'
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://prodanitezolin.com.br'
 
   // Páginas estáticas
   const staticPages: MetadataRoute.Sitemap = [

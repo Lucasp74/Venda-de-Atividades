@@ -20,7 +20,7 @@ const nunito = Nunito({
   display:  'swap',
 })
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://prodani.com.br'
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://prodanitezolin.com.br'
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),

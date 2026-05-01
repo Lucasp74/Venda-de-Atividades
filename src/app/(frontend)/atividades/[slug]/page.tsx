@@ -62,7 +62,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const product   = await getProduct(slug)
   if (!product) return { title: 'Atividade não encontrada' }
 
-  const base      = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://prodani.com.br'
+  const base      = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://prodanitezolin.com.br'
   const cover     = typeof product.coverImage === 'object' ? product.coverImage : null
   const ogImage   = cover?.url
     ? [{ url: cover.url, width: 800, height: 600, alt: product.title }]
@@ -99,7 +99,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const catLabel   = CATEGORY_LABELS[product.category] ?? product.category
   const priceFormatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)
 
-  const base     = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://prodani.com.br'
+  const base     = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://prodanitezolin.com.br'
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type':    'FAQPage',
