@@ -46,6 +46,8 @@ export default function Footer() {
             ))}
             <Link
               href="/admin"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-white/30 text-caption hover:text-white/60 transition-colors duration-200 ml-1"
             >
               Área Restrita
