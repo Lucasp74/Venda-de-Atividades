@@ -270,14 +270,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   <span className="text-ink-muted text-body-sm">pagamento único</span>
                 </div>
 
-                <BuyButton productSlug={product.slug} productTitle={product.title} />
-                <AddToCartButton
-                  productId={String(product.id)}
-                  slug={product.slug ?? ''}
-                  title={product.title}
-                  price={product.price}
-                  coverImage={(product.coverImage as any)?.blobUrl ?? (product.coverImage as any)?.url ?? null}
-                />
+                <div className="flex flex-col gap-3">
+                  <BuyButton productSlug={product.slug} productTitle={product.title} />
+                  <AddToCartButton
+                    productId={String(product.id)}
+                    slug={product.slug ?? ''}
+                    title={product.title}
+                    price={product.price}
+                    coverImage={(product.coverImage as any)?.blobUrl ?? (product.coverImage as any)?.url ?? null}
+                  />
+                </div>
 
                 <p className="text-caption text-ink-light text-center mt-4 flex items-center justify-center gap-1">
                   <span aria-hidden="true">🔒</span>
