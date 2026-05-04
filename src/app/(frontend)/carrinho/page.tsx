@@ -1,5 +1,6 @@
 'use client'
 
+import { useState }      from 'react'
 import { useRouter }     from 'next/navigation'
 import Link              from 'next/link'
 import Image             from 'next/image'
@@ -11,17 +12,49 @@ const fmt = (v: number) =>
 
 export default function CartPage() {
   const { items, removeItem, clearCart, totalItems, totalPrice } = useCart()
-  const router = useRouter()
+  const router    = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [error,   setError]   = useState<string | null>(null)
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (items.length === 0) return
-    if (items.length === 1) {
-      // Fluxo atual — redireciona para o checkout individual
-      router.push(`/checkout/${items[0].slug}`)
-      return
+    setLoading(true)
+    setError(null)
+
+    try {
+      if (items.length === 1) {
+        // Produto único — usa o fluxo existente com o Checkout Brick
+        router.push(`/checkout/${items[0].slug}`)
+        return
+      }
+
+      // Múltiplos itens — chama a API com todos os produtos de uma vez
+      const res = await fetch('/api/mercadopago/checkout', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items.map(i => ({
+            productId: i.productId,
+            title:     i.title,
+            price:     i.price,
+          })),
+        }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error((data as any).error ?? 'Erro ao criar preferência')
+      }
+
+      const { init_point } = await res.json()
+      if (!init_point) throw new Error('Link de pagamento não recebido')
+
+      // Redireciona para o checkout do Mercado Pago
+      window.location.href = init_point
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Tente novamente em instantes.')
+      setLoading(false)
     }
-    // Multi-produto — disponível em breve (Commit 2)
-    router.push('/checkout/carrinho')
   }
 
   // ── Carrinho vazio ───────────────────────────────────────────────────────
@@ -147,11 +180,18 @@ export default function CartPage() {
               <span className="font-heading font-800 text-primary text-h3 tabular-nums">{fmt(totalPrice)}</span>
             </div>
 
+            {error && (
+              <p className="text-caption text-red-500 bg-red-50 rounded-xl px-3 py-2 text-center">
+                {error}
+              </p>
+            )}
+
             <button
               onClick={handleCheckout}
+              disabled={loading}
               className="btn-primary w-full text-base"
             >
-              Finalizar compra
+              {loading ? 'Aguarde…' : 'Finalizar compra'}
             </button>
 
             <p className="text-caption text-ink-light text-center flex items-center justify-center gap-1">

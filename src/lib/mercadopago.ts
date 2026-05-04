@@ -7,7 +7,7 @@ export function getMercadoPagoClient() {
   return new MercadoPagoConfig({ accessToken })
 }
 
-// ── Preferência (ainda usada para back_urls do Wallet) ────────────
+// ── Preferência — produto único ───────────────────────────────────
 export type CreatePreferenceParams = {
   productId:    string
   productTitle: string
@@ -46,6 +46,54 @@ export async function createPreference(params: CreatePreferenceParams) {
     statement_descriptor: 'PRO DANI ATIVIDADES',
     metadata: {
       product_id: params.productId,
+    },
+  }
+
+  return preference.create({ body })
+}
+
+// ── Preferência — carrinho (múltiplos produtos) ───────────────────
+export type CartPreferenceItem = {
+  productId:    string
+  productTitle: string
+  price:        number
+}
+
+export type CreateCartPreferenceParams = {
+  items:        CartPreferenceItem[]
+  buyerEmail?:  string
+  buyerName?:   string
+}
+
+export async function createCartPreference(params: CreateCartPreferenceParams) {
+  const client     = getMercadoPagoClient()
+  const preference = new Preference(client)
+
+  const baseUrl     = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
+  const isLocalhost = baseUrl.includes('localhost')
+
+  const body: Record<string, unknown> = {
+    items: params.items.map(item => ({
+      id:          item.productId,
+      title:       item.productTitle,
+      unit_price:  item.price,
+      quantity:    1,
+      currency_id: 'BRL',
+    })),
+    payer: params.buyerEmail
+      ? { email: params.buyerEmail, name: params.buyerName }
+      : undefined,
+    back_urls: {
+      success: `${baseUrl}/checkout/sucesso`,
+      failure: `${baseUrl}/checkout/falhou`,
+      pending: `${baseUrl}/checkout/pendente`,
+    },
+    ...(!isLocalhost && { auto_return: 'approved' }),
+    ...(!isLocalhost && { notification_url: `${baseUrl}/api/mercadopago/webhook` }),
+    statement_descriptor: 'PRO DANI ATIVIDADES',
+    // product_ids sinaliza ao webhook que é uma compra de carrinho
+    metadata: {
+      product_ids: params.items.map(i => i.productId),
     },
   }
 
