@@ -11,11 +11,18 @@ import type { NextRequest } from 'next/server'
 export function isAllowedOrigin(req: NextRequest): boolean {
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
 
-  // Monta conjunto de hosts permitidos
+  // Monta conjunto de hosts permitidos (www e non-www de cada origem)
   const allowedHosts = new Set<string>()
   for (const raw of [base, 'http://localhost:3000']) {
     try {
-      allowedHosts.add(new URL(raw).host)
+      const h = new URL(raw).host
+      allowedHosts.add(h)
+      // Aceita também a variante www ↔ non-www
+      if (h.startsWith('www.')) {
+        allowedHosts.add(h.slice(4))
+      } else {
+        allowedHosts.add(`www.${h}`)
+      }
     } catch {
       // URL inválida na env — ignora
     }
