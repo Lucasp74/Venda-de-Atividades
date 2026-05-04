@@ -5,7 +5,8 @@ import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import type { Product } from '@/payload-types'
-import BuyButton from '@/components/BuyButton'
+import BuyButton        from '@/components/BuyButton'
+import AddToCartButton  from '@/components/AddToCartButton'
 import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 
 // ── ISR: revalida cada página de produto a cada 30 minutos
@@ -166,7 +167,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <p className="text-caption text-ink-light truncate">{product.title}</p>
           <span className="font-heading font-800 text-h3 text-primary tabular-nums leading-tight">{priceFormatted}</span>
         </div>
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 flex items-center gap-2">
+          <AddToCartButton
+            productId={String(product.id)}
+            slug={product.slug ?? ''}
+            title={product.title}
+            price={product.price}
+            coverImage={(product.coverImage as any)?.blobUrl ?? (product.coverImage as any)?.url ?? null}
+            compact
+          />
           <BuyButton productSlug={product.slug} productTitle={product.title} compact />
         </div>
       </div>
@@ -262,6 +271,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 </div>
 
                 <BuyButton productSlug={product.slug} productTitle={product.title} />
+                <AddToCartButton
+                  productId={String(product.id)}
+                  slug={product.slug ?? ''}
+                  title={product.title}
+                  price={product.price}
+                  coverImage={(product.coverImage as any)?.blobUrl ?? (product.coverImage as any)?.url ?? null}
+                />
 
                 <p className="text-caption text-ink-light text-center mt-4 flex items-center justify-center gap-1">
                   <span aria-hidden="true">🔒</span>

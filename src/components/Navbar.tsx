@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { useCart } from '@/context/CartContext'
 
 const links = [
   { href: '/',            label: 'Home'        },
@@ -11,8 +12,9 @@ const links = [
 ]
 
 export default function Navbar() {
-  const pathname = usePathname()
+  const pathname    = usePathname()
   const [open, setOpen] = useState(false)
+  const { totalItems } = useCart()
 
   // Fecha o menu ao navegar
   useEffect(() => { setOpen(false) }, [pathname])
@@ -64,27 +66,64 @@ export default function Navbar() {
             })}
           </ul>
 
-          {/* CTA — desktop */}
-          <Link
-            href="/atividades"
-            className="hidden md:inline-flex btn-primary text-sm px-5 py-2.5"
-            aria-label="Ver todas as atividades"
-          >
-            Ver Atividades
-          </Link>
+          {/* Ícone do carrinho + CTA — desktop */}
+          <div className="hidden md:flex items-center gap-3">
+            <Link
+              href="/carrinho"
+              className="relative flex items-center justify-center w-10 h-10 rounded-xl hover:bg-primary-50 transition-colors text-ink hover:text-primary"
+              aria-label={`Carrinho${totalItems > 0 ? ` — ${totalItems} ${totalItems === 1 ? 'item' : 'itens'}` : ' vazio'}`}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="9"  cy="21" r="1"/>
+                <circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[0.6rem] font-800 rounded-full flex items-center justify-center leading-none" aria-hidden="true">
+                  {totalItems > 9 ? '9+' : totalItems}
+                </span>
+              )}
+            </Link>
+            <Link
+              href="/atividades"
+              className="btn-primary text-sm px-5 py-2.5"
+              aria-label="Ver todas as atividades"
+            >
+              Ver Atividades
+            </Link>
+          </div>
 
-          {/* Botão hamburger — mobile */}
-          <button
-            className="md:hidden flex flex-col justify-center items-center gap-1.5 w-11 h-11 rounded-lg hover:bg-primary-50 transition-colors"
-            onClick={() => setOpen(v => !v)}
-            aria-expanded={open}
-            aria-controls="mobile-menu"
-            aria-label={open ? 'Fechar menu' : 'Abrir menu'}
-          >
-            <span className={`block w-5 h-0.5 bg-ink transition-all duration-300 ${open ? 'rotate-45 translate-y-2' : ''}`} />
-            <span className={`block w-5 h-0.5 bg-ink transition-all duration-300 ${open ? 'opacity-0 scale-x-0' : ''}`} />
-            <span className={`block w-5 h-0.5 bg-ink transition-all duration-300 ${open ? '-rotate-45 -translate-y-2' : ''}`} />
-          </button>
+          {/* Ícone do carrinho + hamburger — mobile */}
+          <div className="md:hidden flex items-center gap-1">
+            <Link
+              href="/carrinho"
+              className="relative flex items-center justify-center w-10 h-10 rounded-xl hover:bg-primary-50 transition-colors text-ink"
+              aria-label={`Carrinho${totalItems > 0 ? ` — ${totalItems} ${totalItems === 1 ? 'item' : 'itens'}` : ' vazio'}`}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="9"  cy="21" r="1"/>
+                <circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-white text-[0.55rem] font-800 rounded-full flex items-center justify-center leading-none" aria-hidden="true">
+                  {totalItems > 9 ? '9+' : totalItems}
+                </span>
+              )}
+            </Link>
+
+            <button
+              className="flex flex-col justify-center items-center gap-1.5 w-11 h-11 rounded-lg hover:bg-primary-50 transition-colors"
+              onClick={() => setOpen(v => !v)}
+              aria-expanded={open}
+              aria-controls="mobile-menu"
+              aria-label={open ? 'Fechar menu' : 'Abrir menu'}
+            >
+              <span className={`block w-5 h-0.5 bg-ink transition-all duration-300 ${open ? 'rotate-45 translate-y-2' : ''}`} />
+              <span className={`block w-5 h-0.5 bg-ink transition-all duration-300 ${open ? 'opacity-0 scale-x-0' : ''}`} />
+              <span className={`block w-5 h-0.5 bg-ink transition-all duration-300 ${open ? '-rotate-45 -translate-y-2' : ''}`} />
+            </button>
+          </div>
         </nav>
       </header>
 
@@ -147,7 +186,25 @@ export default function Navbar() {
             })}
           </ul>
 
-          <div className="mt-4">
+          <div className="mt-4 flex flex-col gap-3">
+            <Link
+              href="/carrinho"
+              className="flex items-center gap-3 w-full min-h-[52px] px-4 rounded-xl font-body font-700 text-base text-ink hover:bg-gray-50 transition-colors"
+            >
+              <span className="relative">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="9"  cy="21" r="1"/>
+                  <circle cx="20" cy="21" r="1"/>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                {totalItems > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-primary text-white text-[0.55rem] font-800 rounded-full flex items-center justify-center leading-none">
+                    {totalItems}
+                  </span>
+                )}
+              </span>
+              Carrinho {totalItems > 0 && `(${totalItems})`}
+            </Link>
             <Link href="/atividades" className="btn-primary w-full text-base">
               Ver Atividades
             </Link>

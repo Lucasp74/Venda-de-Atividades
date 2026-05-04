@@ -2,9 +2,10 @@ import type { Metadata } from 'next'
 import { Nunito, Poppins } from 'next/font/google'
 import { Suspense } from 'react'
 import '../globals.css'
-import Navbar from '@/components/Navbar'
-import Footer from '@/components/Footer'
+import Navbar    from '@/components/Navbar'
+import Footer    from '@/components/Footer'
 import Analytics from '@/components/Analytics'
+import { CartProvider } from '@/context/CartContext'
 
 const poppins = Poppins({
   subsets:  ['latin'],
@@ -101,11 +102,13 @@ export default function FrontendLayout({ children }: { children: React.ReactNode
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
-        <Navbar />
-        <main id="main-content" tabIndex={-1}>
-          {children}
-        </main>
-        <Footer />
+        <CartProvider>
+          <Navbar />
+          <main id="main-content" tabIndex={-1}>
+            {children}
+          </main>
+          <Footer />
+        </CartProvider>
         {/*
          * ── Analytics (GA4 + Google Ads) ──────────────────────────
          * Carrega com estratégia "afterInteractive" — não bloqueia.
