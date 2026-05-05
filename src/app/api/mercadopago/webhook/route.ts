@@ -236,7 +236,7 @@ async function handleCartPayment(p: {
     await p.payload.create({
       collection: 'order-items',
       data: {
-        order:         order.id,
+        orderId:       order.id,
         product:       productId,
         productTitle:  product.title,
         price:         product.price,

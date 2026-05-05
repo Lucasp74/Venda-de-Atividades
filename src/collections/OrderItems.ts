@@ -19,12 +19,13 @@ export const OrderItems: CollectionConfig = {
   },
   fields: [
     {
-      name:       'order',
-      type:       'relationship',
-      relationTo: 'orders',
-      required:   true,
-      index:      true,
-      label:      'Pedido',
+      // Armazenado como número (evita reverse-query bug do Payload v3.33.0)
+      // O FK order_id → orders.id existe no banco via migration SQL.
+      name:     'orderId',
+      type:     'number',
+      label:    'ID do Pedido',
+      required: true,
+      index:    true,
       admin: { readOnly: true },
     },
     {
