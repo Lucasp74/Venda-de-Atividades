@@ -12,9 +12,10 @@ const fmt = (v: number) =>
 
 export default function CartPage() {
   const { items, removeItem, clearCart, totalItems, totalPrice } = useCart()
-  const router    = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [error,   setError]   = useState<string | null>(null)
+  const router      = useRouter()
+  const [loading,   setLoading]   = useState(false)
+  const [error,     setError]     = useState<string | null>(null)
+  const [buyerName, setBuyerName] = useState('')
 
   const handleCheckout = async () => {
     if (items.length === 0) return
@@ -38,6 +39,7 @@ export default function CartPage() {
             title:     i.title,
             price:     i.price,
           })),
+          buyerName: buyerName.trim(),
         }),
       })
 
@@ -178,6 +180,25 @@ export default function CartPage() {
             <div className="border-t border-gray-100 pt-4 flex justify-between items-baseline">
               <span className="font-heading font-700 text-ink">Total</span>
               <span className="font-heading font-800 text-primary text-h3 tabular-nums">{fmt(totalPrice)}</span>
+            </div>
+
+            {/* Campo de nome */}
+            <div>
+              <label
+                htmlFor="cart-buyer-name"
+                className="block text-caption font-700 text-ink mb-1"
+              >
+                Seu nome completo
+              </label>
+              <input
+                id="cart-buyer-name"
+                type="text"
+                value={buyerName}
+                onChange={e => setBuyerName(e.target.value)}
+                placeholder="Como você quer ser chamado(a)"
+                autoComplete="name"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-body-sm text-ink placeholder:text-ink-light focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+              />
             </div>
 
             {error && (

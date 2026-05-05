@@ -21,6 +21,7 @@ export default function CheckoutBrick({ productId, productTitle, price }: Props)
   const [status, setStatus]             = useState<PaymentStatus>('loading')
   const [errorMsg, setErrorMsg]         = useState('')
   const [preferenceId, setPreferenceId] = useState<string | null>(null)
+  const [buyerName, setBuyerName]       = useState('')
   // sessionId gerado uma única vez por montagem — garante idempotência em retries
   const sessionId = useRef<string>(globalThis.crypto.randomUUID())
 
@@ -77,6 +78,7 @@ export default function CheckoutBrick({ productId, productTitle, price }: Props)
           productId,
           productTitle,
           sessionId: sessionId.current,
+          buyerName: buyerName.trim(),
         }),
         signal: controller.signal,
       })
@@ -165,6 +167,25 @@ export default function CheckoutBrick({ productId, productTitle, price }: Props)
           {errorMsg || 'Ocorreu um erro. Tente novamente.'}
         </div>
       )}
+
+      {/* Campo de nome — sempre visível antes do formulário de pagamento */}
+      <div className="mb-6">
+        <label
+          htmlFor="buyer-name"
+          className="block text-body-sm font-700 text-ink mb-1"
+        >
+          Seu nome completo
+        </label>
+        <input
+          id="buyer-name"
+          type="text"
+          value={buyerName}
+          onChange={e => setBuyerName(e.target.value)}
+          placeholder="Como você gostaria de ser chamado(a)"
+          autoComplete="name"
+          className="w-full rounded-xl border border-gray-200 px-4 py-3 text-body text-ink placeholder:text-ink-light focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+        />
+      </div>
 
       {preferenceId && (
         <Payment

@@ -38,7 +38,8 @@ export async function POST(req: NextRequest) {
       payer,
     } = paymentData
 
-    const sessionId = (body.sessionId as string | undefined) ?? undefined
+    const sessionId      = (body.sessionId  as string | undefined) ?? undefined
+    const submittedName  = (body.buyerName  as string | undefined)?.trim() ?? ''
 
     if (!productId || !transaction_amount) {
       return NextResponse.json({ error: 'Dados inválidos' }, { status: 400 })
@@ -84,8 +85,9 @@ export async function POST(req: NextRequest) {
     // getPayload só é inicializado aqui — pagamentos PIX/boleto vão para
     // "pending" e passam pelo webhook, nunca chegando neste bloco.
     if (paymentStatus === 'approved') {
-      const buyerEmail = payer?.email ?? ''
-      const buyerName  = `${payment.payer?.first_name ?? ''} ${payment.payer?.last_name ?? ''}`.trim()
+      const buyerEmail    = payer?.email ?? ''
+      const nameFromMP    = `${payment.payer?.first_name ?? ''} ${payment.payer?.last_name ?? ''}`.trim()
+      const buyerName     = nameFromMP || submittedName
 
       // Checa duplicidade via SQL direto
       const { rows: existing } = await getPool().query<{ id: number }>(
