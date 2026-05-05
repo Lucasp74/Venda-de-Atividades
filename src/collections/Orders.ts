@@ -109,6 +109,20 @@ export const Orders: CollectionConfig = {
         },
       },
     },
+    // ── Itens do pedido (compras via carrinho) ────────────────────
+    // Join virtual — não cria coluna na tabela; exibe os OrderItems
+    // relacionados a este pedido diretamente no painel admin.
+    {
+      name:       'items',
+      type:       'join',
+      collection: 'order-items',
+      on:         'order',
+      label:      'Itens do pedido',
+      admin: {
+        description: 'Produtos comprados neste pedido. Preenchido automaticamente em compras via carrinho.',
+        readOnly: true,
+      },
+    },
   ],
   timestamps: true,
 }

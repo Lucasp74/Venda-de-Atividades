@@ -187,6 +187,8 @@ async function handleSinglePayment(p: {
 }
 
 // ── Carrinho (múltiplos produtos) ─────────────────────────────────────────────
+// Estrutura correta: 1 order por pagamento + N orderItems (1 por produto)
+// Isso respeita o unique constraint em orders.mercadoPagoId e mantém o banco limpo.
 
 async function handleCartPayment(p: {
   payload:       Awaited<ReturnType<typeof getPayload>>
@@ -198,9 +200,26 @@ async function handleCartPayment(p: {
   paymentMethod: string
   baseUrl:       string
 }) {
-  // Cria uma order por produto + gera um token de download por produto
-  const downloads:     Array<{ productTitle: string; downloadUrl: string }> = []
-  const createdOrders: Array<{ id: number | string }> = []
+  // 1. Cria a order principal (1 por pagamento)
+  const order = await p.payload.create({
+    collection: 'orders',
+    data: {
+      email:          p.buyerEmail,
+      buyerName:      p.buyerName,
+      // product e productTitle ficam vazios — os itens estão em order-items
+      product:        p.productIds[0],           // required pelo schema — usa o primeiro como referência
+      productTitle:   `Carrinho (${p.productIds.length} itens)`,
+      amount:         p.amount,                  // valor total do pagamento
+      status:         'approved',
+      mercadoPagoId:  p.mpPaymentId,             // unique — apenas 1 order por pagamento ✓
+      paymentMethod:  p.paymentMethod,
+      downloadSentAt: new Date().toISOString(),
+      emailSent:      false,
+    },
+  })
+
+  // 2. Para cada produto: busca dados, gera token, cria orderItem
+  const downloads: Array<{ productTitle: string; downloadUrl: string }> = []
 
   for (const productId of p.productIds) {
     let product: Awaited<ReturnType<typeof p.payload.findByID>>
@@ -214,26 +233,20 @@ async function handleCartPayment(p: {
     const downloadToken = generateDownloadToken()
     const downloadUrl   = `${p.baseUrl}/api/download/${downloadToken}`
 
-    const order = await p.payload.create({
-      collection: 'orders',
+    await p.payload.create({
+      collection: 'order-items',
       data: {
-        email:          p.buyerEmail,
-        buyerName:      p.buyerName,
-        product:        productId,
-        productTitle:   product.title,
-        // Cada item guarda seu próprio preço — amount total fica no primeiro item
-        amount:         product.price ?? p.amount,
-        status:         'approved',
-        mercadoPagoId:  p.mpPaymentId,
+        order:         order.id,
+        product:       productId,
+        productTitle:  product.title,
+        price:         product.price,
         downloadToken,
-        paymentMethod:  p.paymentMethod,
-        downloadSentAt: new Date().toISOString(),
-        emailSent:      false,
+        downloadUrl,
+        downloadCount: 0,
       },
     })
 
     downloads.push({ productTitle: product.title, downloadUrl })
-    createdOrders.push(order)
   }
 
   if (downloads.length === 0) {
@@ -241,7 +254,7 @@ async function handleCartPayment(p: {
     return NextResponse.json({ received: true })
   }
 
-  // Um único e-mail com todos os links de download
+  // 3. Um único e-mail com todos os links de download
   if (p.buyerEmail) {
     try {
       await sendCartDownloadEmail({
@@ -249,20 +262,17 @@ async function handleCartPayment(p: {
         buyerName: p.buyerName,
         items:     downloads,
       })
-      // Marca todas as orders como emailSent
-      await Promise.all(createdOrders.map(order =>
-        p.payload.update({
-          collection: 'orders',
-          id: order.id,
-          data: { emailSent: true },
-        }),
-      ))
+      await p.payload.update({
+        collection: 'orders',
+        id: order.id,
+        data: { emailSent: true },
+      })
     } catch (emailErr) {
       console.warn('[Webhook] Falha ao enviar e-mail do carrinho:', emailErr)
     }
   }
 
-  // Registra evento de compra no GA4 para cada produto
+  // 4. Registra evento de compra no GA4 para cada produto
   await Promise.all(
     p.productIds.map((productId, i) =>
       trackServerPurchase({

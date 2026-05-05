@@ -7,10 +7,11 @@ import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
-import { Media    } from './collections/Media'
-import { Orders   } from './collections/Orders'
-import { Products } from './collections/Products'
-import { Users    } from './collections/Users'
+import { Media       } from './collections/Media'
+import { OrderItems  } from './collections/OrderItems'
+import { Orders      } from './collections/Orders'
+import { Products    } from './collections/Products'
+import { Users       } from './collections/Users'
 
 // Usa PostgreSQL sempre que DATABASE_URL estiver definida (produção ou init local)
 const isProd = Boolean(process.env.DATABASE_URL?.startsWith('postgres'))
@@ -47,7 +48,7 @@ export default buildConfig({
     fallbackLanguage: 'pt',
     supportedLanguages: { pt },
   },
-  collections: [Products, Orders, Media, Users],
+  collections: [Products, Orders, OrderItems, Media, Users],
   editor: lexicalEditor(),
   secret: (() => {
     const s = process.env.PAYLOAD_SECRET
@@ -68,10 +69,7 @@ export default buildConfig({
             return url
           })(),
         },
-        // push: true foi removido — tabelas já existem no Neon.
-        // drizzle-kit não está disponível em produção (dev dependency).
-        // Para mudanças de schema futuras: rodar o servidor local apontando
-        // para DATABASE_URL do Neon, o que dispara pushDevSchema em dev mode.
+        migrationDir: path.resolve(dirname, '../migrations'),
       })
     : sqliteAdapter({
         client: {
