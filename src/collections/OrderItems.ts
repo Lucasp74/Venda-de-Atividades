@@ -5,7 +5,7 @@ export const OrderItems: CollectionConfig = {
   labels: { singular: 'Item do Pedido', plural: 'Itens do Pedido' },
   admin: {
     useAsTitle:     'productTitle',
-    defaultColumns: ['productTitle', 'price', 'order', 'downloadCount', 'createdAt'],
+    defaultColumns: ['productTitle', 'price', 'orderId', 'downloadCount', 'createdAt'],
     group:          'Loja',
     // Acessível via pedido — não aparece no menu lateral principal
     hidden: true,
