@@ -29,10 +29,10 @@ export const OrderItems: CollectionConfig = {
       admin: { readOnly: true },
     },
     {
-      name:       'product',
-      type:       'relationship',
-      relationTo: 'products',
-      label:      'Produto',
+      // ID do produto como número — evita reverse-query bug do Payload v3.33.0
+      name:  'productId',
+      type:  'number',
+      label: 'ID do Produto',
       admin: { readOnly: true },
     },
     {

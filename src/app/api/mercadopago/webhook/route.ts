@@ -237,7 +237,7 @@ async function handleCartPayment(p: {
       collection: 'order-items',
       data: {
         orderId:       order.id,
-        product:       productId,
+        productId:     Number(productId),
         productTitle:  product.title,
         price:         product.price,
         downloadToken,
