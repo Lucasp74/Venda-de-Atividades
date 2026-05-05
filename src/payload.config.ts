@@ -69,7 +69,7 @@ export default buildConfig({
             return url
           })(),
         },
-        migrationDir: path.resolve(dirname, '../migrations'),
+        migrationDir: path.resolve(dirname, 'migrations'),
       })
     : sqliteAdapter({
         client: {
