@@ -100,15 +100,8 @@ export const Orders: CollectionConfig = {
         description: 'Se falso, o cliente não recebeu o link. Use o botão "Reenviar Link" para corrigir.',
       },
     },
-    {
-      name: 'resendAction',
-      type: 'ui',
-      admin: {
-        components: {
-          Field: '@/app/(payload)/custom/ResendDownloadButton',
-        },
-      },
-    },
+    // ResendDownloadButton temporariamente removido para diagnóstico
+    // (componente UI com importMap faltando causa tela branca no Payload v3.33.0)
   ],
   timestamps: true,
 }
