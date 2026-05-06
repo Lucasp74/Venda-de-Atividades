@@ -23,9 +23,10 @@ const fmt = (v: number) =>
 export default function CartPage() {
   const { items, removeItem, clearCart, totalItems, totalPrice } = useCart()
   const router      = useRouter()
-  const [loading,   setLoading]   = useState(false)
-  const [error,     setError]     = useState<string | null>(null)
-  const [buyerName, setBuyerName] = useState('')
+  const [loading,    setLoading]    = useState(false)
+  const [error,      setError]      = useState<string | null>(null)
+  const [buyerName,  setBuyerName]  = useState('')
+  const [nameError,  setNameError]  = useState(false)
   // Estado do checkout inline (múltiplos itens)
   const [checkoutData, setCheckoutData] = useState<{
     preferenceId: string
@@ -35,6 +36,12 @@ export default function CartPage() {
 
   const handleCheckout = async () => {
     if (items.length === 0) return
+    if (!buyerName.trim()) {
+      setNameError(true)
+      document.getElementById('cart-buyer-name')?.focus()
+      return
+    }
+    setNameError(false)
     setLoading(true)
     setError(null)
 
@@ -235,11 +242,20 @@ export default function CartPage() {
                 id="cart-buyer-name"
                 type="text"
                 value={buyerName}
-                onChange={e => setBuyerName(e.target.value)}
+                onChange={e => { setBuyerName(e.target.value); if (nameError) setNameError(false) }}
                 placeholder="Como você quer ser chamado(a)"
                 autoComplete="name"
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-body-sm text-ink placeholder:text-ink-light focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                className={`w-full rounded-xl border px-3 py-2 text-body-sm text-ink placeholder:text-ink-light focus:outline-none focus:ring-2 focus:border-transparent transition ${
+                  nameError
+                    ? 'border-red-400 ring-2 ring-red-300 bg-red-50'
+                    : 'border-gray-200 focus:ring-primary'
+                }`}
               />
+              {nameError && (
+                <p className="text-caption text-red-500 mt-1">
+                  Por favor, informe seu nome para continuar.
+                </p>
+              )}
             </div>
 
             {error && (
