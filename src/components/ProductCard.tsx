@@ -50,7 +50,7 @@ export default function ProductCard({ product, featured = false }: Props) {
       className="block"
       aria-label={`Ver detalhes: ${product.title}`}
     >
-      <article className="card group cursor-pointer" aria-label={`Produto: ${product.title}`}>
+      <article className="card group cursor-pointer h-full flex flex-col" aria-label={`Produto: ${product.title}`}>
         {/* Thumbnail */}
         <div className={`relative aspect-[5/3] ${style.bg} flex items-center justify-center overflow-hidden`}>
           {imgSrc ? (
@@ -74,7 +74,7 @@ export default function ProductCard({ product, featured = false }: Props) {
         </div>
 
         {/* Info */}
-        <div className="p-4 flex flex-col gap-2">
+        <div className="p-4 flex flex-col gap-2 flex-1">
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className={`badge ${style.badge} text-[0.65rem] w-fit`}>{style.label}</span>
             {level && (

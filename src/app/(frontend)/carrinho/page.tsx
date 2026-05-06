@@ -1,11 +1,21 @@
 'use client'
 
-import { useState }      from 'react'
-import { useRouter }     from 'next/navigation'
-import Link              from 'next/link'
-import Image             from 'next/image'
-import { useCart }       from '@/context/CartContext'
-import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
+import { useState }          from 'react'
+import { useRouter }          from 'next/navigation'
+import Link                   from 'next/link'
+import Image                  from 'next/image'
+import dynamic                from 'next/dynamic'
+import { useCart }            from '@/context/CartContext'
+import { BLUR_DATA_URL }      from '@/lib/blur-placeholder'
+
+const CartCheckoutBrick = dynamic(() => import('@/components/CartCheckoutBrick'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center py-16">
+      <div className="w-8 h-8 border-[3px] border-primary-200 border-t-primary rounded-full animate-spin" />
+    </div>
+  ),
+})
 
 const fmt = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
@@ -16,6 +26,12 @@ export default function CartPage() {
   const [loading,   setLoading]   = useState(false)
   const [error,     setError]     = useState<string | null>(null)
   const [buyerName, setBuyerName] = useState('')
+  // Estado do checkout inline (múltiplos itens)
+  const [checkoutData, setCheckoutData] = useState<{
+    preferenceId: string
+    amount:       number
+    productIds:   string[]
+  } | null>(null)
 
   const handleCheckout = async () => {
     if (items.length === 0) return
@@ -29,7 +45,7 @@ export default function CartPage() {
         return
       }
 
-      // Múltiplos itens — chama a API com todos os produtos de uma vez
+      // Múltiplos itens — cria preferência e mostra Brick inline
       const res = await fetch('/api/mercadopago/checkout', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -48,11 +64,15 @@ export default function CartPage() {
         throw new Error((data as any).error ?? 'Erro ao criar preferência')
       }
 
-      const { init_point } = await res.json()
-      if (!init_point) throw new Error('Link de pagamento não recebido')
+      const { preference_id } = await res.json()
+      if (!preference_id) throw new Error('Preferência de pagamento não criada')
 
-      // Redireciona para o checkout do Mercado Pago
-      window.location.href = init_point
+      // Exibe o Checkout Brick inline (sem redirecionar para o MP externo)
+      setCheckoutData({
+        preferenceId: preference_id,
+        amount:       totalPrice,
+        productIds:   items.map(i => i.productId),
+      })
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Tente novamente em instantes.')
       setLoading(false)
@@ -98,7 +118,28 @@ export default function CartPage() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {/* ── Checkout inline (múltiplos itens) ── */}
+        {checkoutData && (
+          <div className="bg-white rounded-2xl border-2 border-primary-100 p-6 md:p-8 shadow-card mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="font-heading font-700 text-h3 text-ink">Dados de Pagamento</h2>
+              <button
+                onClick={() => setCheckoutData(null)}
+                className="text-caption text-ink-muted hover:text-ink transition-colors"
+              >
+                ← Voltar ao carrinho
+              </button>
+            </div>
+            <CartCheckoutBrick
+              preferenceId={checkoutData.preferenceId}
+              amount={checkoutData.amount}
+              buyerName={buyerName}
+              productIds={checkoutData.productIds}
+            />
+          </div>
+        )}
+
+        <div className={`grid grid-cols-1 lg:grid-cols-3 gap-8 items-start ${checkoutData ? 'hidden' : ''}`}>
 
           {/* ── Lista de itens ── */}
           <div className="lg:col-span-2 flex flex-col gap-4">
