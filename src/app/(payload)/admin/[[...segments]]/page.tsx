@@ -13,7 +13,5 @@ export async function generateMetadata({ params, searchParams }: Args): Promise<
 }
 
 export default async function Page({ params, searchParams }: Args) {
-  const resolvedParams = await params
-  console.log('[AdminPage] Renderizando:', JSON.stringify(resolvedParams))
   return RootPage({ config, params, searchParams, importMap })
 }

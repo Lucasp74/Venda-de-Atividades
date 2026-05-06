@@ -100,8 +100,16 @@ export const Orders: CollectionConfig = {
         description: 'Se falso, o cliente não recebeu o link. Use o botão "Reenviar Link" para corrigir.',
       },
     },
-    // ResendDownloadButton temporariamente removido para diagnóstico
-    // (componente UI com importMap faltando causa tela branca no Payload v3.33.0)
+    {
+      name:  'resendAction',
+      type:  'ui',
+      label: 'Reenviar link',
+      admin: {
+        components: {
+          Field: '@/app/(payload)/custom/ResendDownloadButton',
+        },
+      },
+    },
   ],
   timestamps: true,
 }

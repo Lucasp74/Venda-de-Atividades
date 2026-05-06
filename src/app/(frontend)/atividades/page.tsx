@@ -13,6 +13,9 @@ export const revalidate = 1800
 export const metadata: Metadata = {
   title:       'Atividades para Professores',
   description: 'Explore atividades de alfabetização, consciência fonológica, matemática e muito mais. Materiais pedagógicos em PDF prontos para imprimir para Educação Infantil e Fundamental 1.',
+  alternates: {
+    canonical: 'https://prodanitezolin.com.br/atividades',
+  },
   openGraph: {
     title:       'Atividades para Professores | Prô Dani',
     description: 'Materiais pedagógicos em PDF prontos para imprimir. Alfabetização, matemática, consciência fonológica e mais.',

@@ -9,6 +9,9 @@ export const dynamic = 'force-static'
 export const metadata: Metadata = {
   title:       'Quem Sou Eu',
   description: 'Conheça a Prô Dani, pedagoga com mais de 10 anos de experiência criando atividades de alfabetização e materiais pedagógicos para professores da Educação Infantil ao Fundamental 1.',
+  alternates: {
+    canonical: 'https://prodanitezolin.com.br/quem-sou-eu',
+  },
   openGraph: {
     title:       'Quem é a Prô Dani?',
     description: 'Pedagoga com mais de 10 anos de experiência criando atividades de alfabetização para professores.',

@@ -25,6 +25,9 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://prodanitezolin.com
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
+  alternates: {
+    canonical: BASE_URL,
+  },
   title: {
     default:  'Atividades de Alfabetização - Prô Dani',
     template: '%s | Prô Dani',

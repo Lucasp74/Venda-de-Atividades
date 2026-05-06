@@ -12,6 +12,9 @@ export const revalidate = 60
 export const metadata: Metadata = {
   title:       'Atividades de Alfabetização - Prô Dani',
   description: 'Atividades de alfabetização e consciência fonológica para professores da Educação Infantil ao Fundamental 1. PDFs prontos para imprimir. Download imediato.',
+  alternates: {
+    canonical: 'https://prodanitezolin.com.br',
+  },
 }
 
 const getFeaturedProducts = unstable_cache(

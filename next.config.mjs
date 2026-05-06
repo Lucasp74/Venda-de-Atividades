@@ -42,6 +42,25 @@ const nextConfig = {
   // ── Compressão de resposta HTTP ─────────────────────────────
   compress: true,
 
+  // ── Redirects permanentes ────────────────────────────────────
+  async redirects() {
+    return [
+      // www → non-www (canonical SEO)
+      {
+        source:      '/:path*',
+        has:         [{ type: 'host', value: 'www.prodanitezolin.com.br' }],
+        destination: 'https://prodanitezolin.com.br/:path*',
+        permanent:   true,
+      },
+      // Produto de teste removido → lista de atividades
+      {
+        source:      '/atividades/teste-2',
+        destination: '/atividades',
+        permanent:   true,
+      },
+    ]
+  },
+
   // ── Headers de segurança e cache ────────────────────────────
   async headers() {
     return [

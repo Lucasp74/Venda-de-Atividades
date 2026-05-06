@@ -2,8 +2,7 @@
 
 /**
  * Error boundary para o painel admin.
- * Captura erros que causariam tela branca silenciosa e os exibe de forma legível.
- * Remover após diagnóstico e correção do problema.
+ * Captura erros de renderização React e os exibe de forma legível em vez de tela branca.
  */
 export default function AdminError({
   error,
