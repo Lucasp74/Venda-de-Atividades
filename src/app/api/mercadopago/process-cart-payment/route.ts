@@ -50,6 +50,8 @@ export async function POST(req: NextRequest) {
     const client     = getMercadoPagoClient()
     const paymentApi = new Payment(client)
 
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
+
     const payment = await paymentApi.create({
       body: {
         token,
@@ -60,6 +62,8 @@ export async function POST(req: NextRequest) {
         payer,
         description:        `Carrinho (${productIds.length} ${productIds.length === 1 ? 'item' : 'itens'})`,
         statement_descriptor: 'PRO DANI',
+        // Garante que o webhook seja chamado mesmo em pagamentos diretos via Payment API
+        notification_url: `${baseUrl}/api/mercadopago/webhook`,
         // product_ids no metadata → webhook identifica como fluxo carrinho
         metadata: {
           product_ids: productIds,
