@@ -126,6 +126,8 @@ export async function processPayment(params: ProcessPaymentParams) {
   // Usa sessionId do frontend quando disponível — garante que retries não criem cobranças duplicadas
   const idempotencyKey = params.sessionId ?? crypto.randomUUID()
 
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
+
   const result = await paymentApi.create({
     body: {
       token:              params.token,
@@ -136,6 +138,9 @@ export async function processPayment(params: ProcessPaymentParams) {
       payer:              params.payer,
       description:        params.productTitle,
       statement_descriptor: 'PRO DANI',
+      // Garante que o webhook seja chamado mesmo em pagamentos diretos via Payment API
+      // (necessário para PIX/boleto que ficam "pending" e precisam do webhook para criar o pedido)
+      notification_url: `${baseUrl}/api/mercadopago/webhook`,
       metadata: {
         product_id: params.productId,
       },
