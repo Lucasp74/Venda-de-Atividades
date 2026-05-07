@@ -22,6 +22,7 @@ export default function CheckoutBrick({ productId, productTitle, price }: Props)
   const [errorMsg, setErrorMsg]         = useState('')
   const [preferenceId, setPreferenceId] = useState<string | null>(null)
   const [buyerName, setBuyerName]       = useState('')
+  const [nameError, setNameError]       = useState(false)
   // sessionId gerado uma única vez por montagem — garante idempotência em retries
   const sessionId = useRef<string>(globalThis.crypto.randomUUID())
 
@@ -61,6 +62,14 @@ export default function CheckoutBrick({ productId, productTitle, price }: Props)
   const handleSubmit = useCallback(async (param: any) => {
     // Proteção contra duplo clique — ignora se já está processando
     if (status === 'processing') return
+
+    // Valida nome antes de processar o pagamento
+    if (!buyerName.trim()) {
+      setNameError(true)
+      document.getElementById('buyer-name')?.focus()
+      return
+    }
+    setNameError(false)
     setStatus('processing')
     setErrorMsg('')
 
@@ -118,7 +127,7 @@ export default function CheckoutBrick({ productId, productTitle, price }: Props)
     } finally {
       clearTimeout(timeoutId)
     }
-  }, [status, productId, productTitle, router])
+  }, [status, buyerName, productId, productTitle, router])
 
   const handleError = useCallback((error: unknown) => {
     console.error('[PaymentBrick] Error:', error)
@@ -174,17 +183,26 @@ export default function CheckoutBrick({ productId, productTitle, price }: Props)
           htmlFor="buyer-name"
           className="block text-body-sm font-700 text-ink mb-1"
         >
-          Seu nome completo
+          Seu nome completo <span className="text-red-500">*</span>
         </label>
         <input
           id="buyer-name"
           type="text"
           value={buyerName}
-          onChange={e => setBuyerName(e.target.value)}
+          onChange={e => { setBuyerName(e.target.value); if (nameError) setNameError(false) }}
           placeholder="Como você gostaria de ser chamado(a)"
           autoComplete="name"
-          className="w-full rounded-xl border border-gray-200 px-4 py-3 text-body text-ink placeholder:text-ink-light focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+          className={`w-full rounded-xl border px-4 py-3 text-body text-ink placeholder:text-ink-light focus:outline-none focus:ring-2 focus:border-transparent transition ${
+            nameError
+              ? 'border-red-400 ring-2 ring-red-300 bg-red-50'
+              : 'border-gray-200 focus:ring-primary'
+          }`}
         />
+        {nameError && (
+          <p className="text-caption text-red-500 mt-1">
+            Por favor, informe seu nome para continuar.
+          </p>
+        )}
       </div>
 
       {preferenceId && (
