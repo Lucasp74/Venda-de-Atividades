@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { initMercadoPago, Payment } from '@mercadopago/sdk-react'
 import { useRouter } from 'next/navigation'
+import { useCart } from '@/context/CartContext'
 
 initMercadoPago(process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY!, {
   locale: 'pt-BR',
@@ -19,6 +20,7 @@ type Status = 'idle' | 'processing' | 'approved' | 'pending' | 'rejected' | 'err
 
 export default function CartCheckoutBrick({ preferenceId, amount, buyerName, productIds }: Props) {
   const router = useRouter()
+  const { clearCart } = useCart()
   const [status,   setStatus]   = useState<Status>('idle')
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -52,11 +54,13 @@ export default function CartCheckoutBrick({ preferenceId, amount, buyerName, pro
 
       switch (data.status) {
         case 'approved':
+          clearCart()
           setStatus('approved')
           setTimeout(() => router.push('/checkout/sucesso'), 2000)
           break
         case 'in_process':
         case 'pending':
+          clearCart()
           setStatus('pending')
           setTimeout(() => router.push('/checkout/pendente'), 2000)
           break
@@ -78,7 +82,7 @@ export default function CartCheckoutBrick({ preferenceId, amount, buyerName, pro
     } finally {
       clearTimeout(timeoutId)
     }
-  }, [status, preferenceId, amount, buyerName, productIds, router])
+  }, [status, preferenceId, amount, buyerName, productIds, router, clearCart])
 
   const handleError = useCallback((error: unknown) => {
     console.error('[CartCheckoutBrick]', error)
