@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { MercadoPagoConfig, Payment } from 'mercadopago'
-import { getPayload } from 'payload'
-import config from '@payload-config'
+import { getPool } from '@/lib/db'
 import { sendDownloadEmail, sendCartDownloadEmail } from '@/lib/email'
 import { trackServerPurchase } from '@/lib/analytics'
 import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
@@ -50,20 +49,14 @@ export async function POST(req: NextRequest) {
   // ── Detecta formato do webhook ────────────────────────────────────────────
   // Novo formato (Checkout Bricks): ?data.id=xxx&type=payment  → verifica assinatura HMAC
   // Formato legado (IPN dashboard):  ?id=xxx&topic=payment     → sem header x-signature
-  const topic  = req.nextUrl.searchParams.get('topic')
+  const topic    = req.nextUrl.searchParams.get('topic')
   const isLegacy = topic === 'payment' || topic === 'merchant_order'
 
   if (isLegacy) {
     // Formato legado não envia x-signature — segurança garantida pelo fetch direto na API do MP
     const legacyId = req.nextUrl.searchParams.get('id')
     if (!legacyId) return NextResponse.json({ received: true })
-
-    try {
-      return await processPaymentById(legacyId)
-    } catch (err) {
-      console.error('[Webhook] Erro no formato legado:', err)
-      return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
-    }
+    return processPaymentById(legacyId)
   }
 
   // Novo formato — valida assinatura HMAC
@@ -82,9 +75,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true })
   }
 
-  const paymentId = notification.data.id
-
-  return processPaymentById(paymentId)
+  return processPaymentById(notification.data.id)
 }
 
 async function processPaymentById(paymentId: string): Promise<NextResponse> {
@@ -99,46 +90,39 @@ async function processPaymentById(paymentId: string): Promise<NextResponse> {
       return NextResponse.json({ received: true, status: payment.status })
     }
 
-    const buyerEmail    = payment.payer?.email  ?? ''
+    const meta = payment.metadata as Record<string, unknown> | undefined
+
+    // PIX frequentemente não retorna email/nome pelo payer — usa metadata como fallback
+    const buyerEmail    = payment.payer?.email                             || (meta?.buyer_email as string | undefined) || ''
     const nameFromPayer = `${payment.payer?.first_name ?? ''} ${payment.payer?.last_name ?? ''}`.trim()
-    // PIX frequentemente não retorna nome pelo payer — usa o nome salvo no metadata como fallback
-    const buyerName     = nameFromPayer || ((payment.metadata as any)?.buyer_name as string | undefined) || ''
+    const buyerName     = nameFromPayer                                    || (meta?.buyer_name  as string | undefined) || ''
     const amount        = payment.transaction_amount ?? 0
     const mpPaymentId   = String(payment.id)
     const paymentMethod = payment.payment_type_id ?? ''
     const baseUrl       = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
 
-    const payload = await getPayload({ config })
-
-    // ── Idempotência — evita processar o mesmo pagamento duas vezes ──
-    const existing = await payload.find({
-      collection: 'orders',
-      where: { mercadoPagoId: { equals: mpPaymentId } },
-      limit: 1,
-    })
-    if (existing.docs.length > 0) {
+    // ── Idempotência via SQL direto ───────────────────────────────────────────
+    const { rows: existing } = await getPool().query<{ id: number }>(
+      `SELECT id FROM orders WHERE mercado_pago_id = $1 LIMIT 1`,
+      [mpPaymentId],
+    )
+    if (existing.length > 0) {
       return NextResponse.json({ received: true, duplicate: true })
     }
 
     // ── Detecta fluxo: carrinho (product_ids) ou produto único (product_id) ──
-    const productIds = payment.metadata?.product_ids as string[] | undefined
-    const productId  = payment.metadata?.product_id  as string   | undefined
+    const productIds = meta?.product_ids as string[] | undefined
+    const productId  = meta?.product_id  as string   | undefined
 
     if (productIds && productIds.length > 0) {
-      return await handleCartPayment({
-        payload, productIds, buyerEmail, buyerName,
-        amount, mpPaymentId, paymentMethod, baseUrl,
-      })
+      return handleCartPayment({ productIds, buyerEmail, buyerName, amount, mpPaymentId, paymentMethod, baseUrl })
     }
 
     if (productId) {
-      return await handleSinglePayment({
-        payload, productId, buyerEmail, buyerName,
-        amount, mpPaymentId, paymentMethod, baseUrl,
-      })
+      return handleSinglePayment({ productId, buyerEmail, buyerName, amount, mpPaymentId, paymentMethod, baseUrl })
     }
 
-    console.error('[Webhook] Nenhum product_id ou product_ids no metadata')
+    console.error('[Webhook] Nenhum product_id ou product_ids no metadata — paymentId:', mpPaymentId)
     return NextResponse.json({ received: true })
 
   } catch (err) {
@@ -150,7 +134,6 @@ async function processPaymentById(paymentId: string): Promise<NextResponse> {
 // ── Produto único ─────────────────────────────────────────────────────────────
 
 async function handleSinglePayment(p: {
-  payload:       Awaited<ReturnType<typeof getPayload>>
   productId:     string
   buyerEmail:    string
   buyerName:     string
@@ -158,64 +141,86 @@ async function handleSinglePayment(p: {
   mpPaymentId:   string
   paymentMethod: string
   baseUrl:       string
-}) {
-  const product = await p.payload.findByID({ collection: 'products', id: p.productId })
+}): Promise<NextResponse> {
+  const numericId = parseInt(p.productId, 10)
+  if (isNaN(numericId)) {
+    console.error('[Webhook] productId inválido:', p.productId)
+    return NextResponse.json({ received: true })
+  }
+
+  const { rows } = await getPool().query<{ id: number; title: string; price: number; category: string }>(
+    `SELECT id, title, price::float8 AS price, category FROM products WHERE id = $1 AND status = 'published' LIMIT 1`,
+    [numericId],
+  )
+  if (!rows[0]) {
+    console.error('[Webhook] Produto não encontrado:', p.productId)
+    return NextResponse.json({ received: true })
+  }
+  const product = rows[0]
 
   const downloadToken = generateDownloadToken()
   const downloadUrl   = `${p.baseUrl}/api/download/${downloadToken}`
 
-  const createdOrder = await p.payload.create({
-    collection: 'orders',
-    data: {
-      email:          p.buyerEmail,
-      buyerName:      p.buyerName,
-      product:        p.productId,
-      productTitle:   product.title,
-      amount:         p.amount,
-      status:         'approved',
-      mercadoPagoId:  p.mpPaymentId,
+  const { rows: [newOrder] } = await getPool().query<{ id: number }>(
+    `INSERT INTO orders (
+      email, buyer_name, product_id, product_title,
+      amount, status, mercado_pago_id,
+      download_token, payment_method,
+      download_sent_at, email_sent, download_count,
+      updated_at, created_at
+    ) VALUES (
+      $1, $2, $3, $4,
+      $5, 'approved', $6,
+      $7, $8,
+      NOW(), false, 0,
+      NOW(), NOW()
+    ) RETURNING id`,
+    [
+      p.buyerEmail  || null,
+      p.buyerName   || null,
+      numericId,
+      product.title,
+      p.amount,
+      p.mpPaymentId,
       downloadToken,
-      paymentMethod:  p.paymentMethod,
-      downloadSentAt: new Date().toISOString(),
-      emailSent:      false,
-    },
-  })
+      p.paymentMethod,
+    ],
+  )
 
-  if (p.buyerEmail) {
-    try {
-      await sendDownloadEmail({
-        to:           p.buyerEmail,
-        buyerName:    p.buyerName,
-        productTitle: product.title,
-        downloadUrl,
-      })
-      await p.payload.update({
-        collection: 'orders',
-        id: createdOrder.id,
-        data: { emailSent: true },
-      })
-    } catch (emailErr) {
-      console.warn('[Webhook] Falha ao enviar e-mail — orderId:', createdOrder.id, emailErr)
-    }
-  }
+  await Promise.all([
+    (async () => {
+      if (!p.buyerEmail) return
+      try {
+        await sendDownloadEmail({
+          to:           p.buyerEmail,
+          buyerName:    p.buyerName,
+          productTitle: product.title,
+          downloadUrl,
+        })
+        await getPool().query(
+          `UPDATE orders SET email_sent = true, updated_at = NOW() WHERE id = $1`,
+          [newOrder.id],
+        )
+      } catch (emailErr) {
+        console.warn('[Webhook] Falha ao enviar e-mail — orderId:', newOrder.id, emailErr)
+      }
+    })(),
 
-  await trackServerPurchase({
-    transactionId: p.mpPaymentId,
-    productId:     p.productId,
-    productName:   product.title,
-    price:         p.amount,
-    category:      product.category ?? '',
-  })
+    trackServerPurchase({
+      transactionId: p.mpPaymentId,
+      productId:     p.productId,
+      productName:   product.title,
+      price:         p.amount,
+      category:      product.category ?? '',
+    }).catch(() => { /* GA4 não é crítico */ }),
+  ])
 
   return NextResponse.json({ received: true, success: true })
 }
 
 // ── Carrinho (múltiplos produtos) ─────────────────────────────────────────────
-// Estrutura correta: 1 order por pagamento + N orderItems (1 por produto)
-// Isso respeita o unique constraint em orders.mercadoPagoId e mantém o banco limpo.
 
 async function handleCartPayment(p: {
-  payload:       Awaited<ReturnType<typeof getPayload>>
   productIds:    string[]
   buyerEmail:    string
   buyerName:     string
@@ -223,80 +228,79 @@ async function handleCartPayment(p: {
   mpPaymentId:   string
   paymentMethod: string
   baseUrl:       string
-}) {
-  // 1. Cria a order principal (1 por pagamento)
-  const order = await p.payload.create({
-    collection: 'orders',
-    data: {
-      email:          p.buyerEmail,
-      buyerName:      p.buyerName,
-      // product e productTitle ficam vazios — os itens estão em order-items
-      product:        p.productIds[0],           // required pelo schema — usa o primeiro como referência
-      productTitle:   `Carrinho (${p.productIds.length} itens)`,
-      amount:         p.amount,                  // valor total do pagamento
-      status:         'approved',
-      mercadoPagoId:  p.mpPaymentId,             // unique — apenas 1 order por pagamento ✓
-      paymentMethod:  p.paymentMethod,
-      downloadSentAt: new Date().toISOString(),
-      emailSent:      false,
-    },
-  })
+}): Promise<NextResponse> {
+  const productNums = p.productIds.map(id => parseInt(id, 10)).filter(n => !isNaN(n))
 
-  // 2. Para cada produto: busca dados, gera token, cria orderItem
+  const { rows: products } = await getPool().query<{ id: number; title: string; price: number }>(
+    `SELECT id, title, price::float8 AS price FROM products WHERE id = ANY($1) AND status = 'published'`,
+    [productNums],
+  )
+
+  if (products.length === 0) {
+    console.error('[Webhook] Nenhum produto encontrado para IDs:', p.productIds)
+    return NextResponse.json({ received: true })
+  }
+
+  // 1. Order principal
+  const { rows: [newOrder] } = await getPool().query<{ id: number }>(
+    `INSERT INTO orders (
+      email, buyer_name, product_id, product_title,
+      amount, status, mercado_pago_id,
+      download_token, payment_method,
+      download_sent_at, email_sent, download_count,
+      updated_at, created_at
+    ) VALUES (
+      $1, $2, $3, $4,
+      $5, 'approved', $6,
+      $7, $8,
+      NOW(), false, 0,
+      NOW(), NOW()
+    ) RETURNING id`,
+    [
+      p.buyerEmail  || null,
+      p.buyerName   || null,
+      productNums[0],
+      `Carrinho (${products.length} ${products.length === 1 ? 'item' : 'itens'})`,
+      p.amount,
+      p.mpPaymentId,
+      generateDownloadToken(),
+      p.paymentMethod,
+    ],
+  )
+
+  // 2. Order items + links de download
   const downloads: Array<{ productTitle: string; downloadUrl: string }> = []
 
-  for (const productId of p.productIds) {
-    let product: Awaited<ReturnType<typeof p.payload.findByID>>
-    try {
-      product = await p.payload.findByID({ collection: 'products', id: productId })
-    } catch {
-      console.warn(`[Webhook] Produto ${productId} não encontrado — pulado`)
-      continue
-    }
-
+  for (const product of products) {
     const downloadToken = generateDownloadToken()
     const downloadUrl   = `${p.baseUrl}/api/download/${downloadToken}`
 
-    await p.payload.create({
-      collection: 'order-items',
-      data: {
-        orderId:       order.id,
-        productId:     Number(productId),
-        productTitle:  product.title,
-        price:         product.price,
-        downloadToken,
-        downloadUrl,
-        downloadCount: 0,
-      },
-    })
+    await getPool().query(
+      `INSERT INTO order_items (
+        order_id, product_id, product_title, price,
+        download_token, download_url, download_count,
+        updated_at, created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, 0, NOW(), NOW())`,
+      [newOrder.id, product.id, product.title, product.price, downloadToken, downloadUrl],
+    )
 
     downloads.push({ productTitle: product.title, downloadUrl })
   }
 
-  if (downloads.length === 0) {
-    console.error('[Webhook] Nenhum produto processado no carrinho')
-    return NextResponse.json({ received: true })
-  }
-
-  // 3. Um único e-mail com todos os links de download
-  if (p.buyerEmail) {
+  // 3. E-mail com todos os links
+  if (p.buyerEmail && downloads.length > 0) {
     try {
-      await sendCartDownloadEmail({
-        to:        p.buyerEmail,
-        buyerName: p.buyerName,
-        items:     downloads,
-      })
-      await p.payload.update({
-        collection: 'orders',
-        id: order.id,
-        data: { emailSent: true },
-      })
+      await sendCartDownloadEmail({ to: p.buyerEmail, buyerName: p.buyerName, items: downloads })
+      await getPool().query(
+        `UPDATE orders SET email_sent = true, updated_at = NOW() WHERE id = $1`,
+        [newOrder.id],
+      )
     } catch (emailErr) {
       console.warn('[Webhook] Falha ao enviar e-mail do carrinho:', emailErr)
     }
   }
 
-  // 4. Registra evento de compra no GA4 para cada produto
+  // 4. GA4
   await Promise.all(
     p.productIds.map((productId, i) =>
       trackServerPurchase({

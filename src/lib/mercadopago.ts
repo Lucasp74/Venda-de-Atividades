@@ -148,9 +148,10 @@ export async function processPayment(params: ProcessPaymentParams) {
       // (necessário para PIX/boleto que ficam "pending" e precisam do webhook para criar o pedido)
       notification_url: `${baseUrl}/api/mercadopago/webhook`,
       metadata: {
-        product_id: params.productId,
-        // Salvo no metadata para recuperar no webhook (PIX não retorna nome pelo payer)
-        buyer_name: params.buyerName ?? '',
+        product_id:  params.productId,
+        // Salvos no metadata para recuperar no webhook (PIX não retorna nome/email pelo payer)
+        buyer_name:  params.buyerName  ?? '',
+        buyer_email: params.payer.email ?? '',
       },
     },
     requestOptions: {

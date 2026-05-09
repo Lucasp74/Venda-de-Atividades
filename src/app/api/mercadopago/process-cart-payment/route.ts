@@ -77,9 +77,10 @@ export async function POST(req: NextRequest) {
         // Webhook para pagamentos pendentes (PIX/boleto)
         notification_url:     `${baseUrl}/api/mercadopago/webhook`,
         metadata: {
-          product_ids: productIds,
-          // Salvo no metadata para recuperar no webhook (PIX não retorna nome pelo payer)
-          buyer_name: buyerName,
+          product_ids:  productIds,
+          // Salvos no metadata para recuperar no webhook (PIX não retorna nome/email pelo payer)
+          buyer_name:   buyerName,
+          buyer_email:  payer?.email ?? '',
         },
         ...(preferenceId ? { external_reference: preferenceId } : {}),
       },
