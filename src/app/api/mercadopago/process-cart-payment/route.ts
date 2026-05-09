@@ -180,10 +180,10 @@ export async function POST(req: NextRequest) {
     if (paymentStatus === 'pending' || paymentStatus === 'in_process') {
       const buyerEmail = payer?.email ?? ''
       const isPix      = payment_method_id === 'pix'
-      console.log('[ProcessCartPayment] PIX pending — buyerEmail:', buyerEmail, '| payerRaw:', JSON.stringify(payer ?? null))
+
 
       if (buyerEmail) {
-        sendPendingEmail({
+        await sendPendingEmail({
           to:        buyerEmail,
           buyerName,
           amount:    finalAmount,

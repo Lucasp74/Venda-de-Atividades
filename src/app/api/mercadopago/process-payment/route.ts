@@ -169,7 +169,7 @@ export async function POST(req: NextRequest) {
       const isPix      = payment_method_id === 'pix'
 
       if (buyerEmail) {
-        sendPendingEmail({
+        await sendPendingEmail({
           to:        buyerEmail,
           buyerName: submittedName,
           amount:    product.price,
