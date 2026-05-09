@@ -47,6 +47,26 @@ export async function POST(req: NextRequest) {
 
   const rawBody = await req.text()
 
+  // ── Detecta formato do webhook ────────────────────────────────────────────
+  // Novo formato (Checkout Bricks): ?data.id=xxx&type=payment  → verifica assinatura HMAC
+  // Formato legado (IPN dashboard):  ?id=xxx&topic=payment     → sem header x-signature
+  const topic  = req.nextUrl.searchParams.get('topic')
+  const isLegacy = topic === 'payment' || topic === 'merchant_order'
+
+  if (isLegacy) {
+    // Formato legado não envia x-signature — segurança garantida pelo fetch direto na API do MP
+    const legacyId = req.nextUrl.searchParams.get('id')
+    if (!legacyId) return NextResponse.json({ received: true })
+
+    try {
+      return await processPaymentById(legacyId)
+    } catch (err) {
+      console.error('[Webhook] Erro no formato legado:', err)
+      return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
+    }
+  }
+
+  // Novo formato — valida assinatura HMAC
   if (!verifyWebhookSignature(req, rawBody)) {
     return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 })
   }
@@ -64,6 +84,10 @@ export async function POST(req: NextRequest) {
 
   const paymentId = notification.data.id
 
+  return processPaymentById(paymentId)
+}
+
+async function processPaymentById(paymentId: string): Promise<NextResponse> {
   try {
     const mpClient = new MercadoPagoConfig({
       accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
@@ -75,10 +99,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true, status: payment.status })
     }
 
-    const buyerEmail     = payment.payer?.email  ?? ''
-    const nameFromPayer  = `${payment.payer?.first_name ?? ''} ${payment.payer?.last_name ?? ''}`.trim()
+    const buyerEmail    = payment.payer?.email  ?? ''
+    const nameFromPayer = `${payment.payer?.first_name ?? ''} ${payment.payer?.last_name ?? ''}`.trim()
     // PIX frequentemente não retorna nome pelo payer — usa o nome salvo no metadata como fallback
-    const buyerName      = nameFromPayer || ((payment.metadata as any)?.buyer_name as string | undefined) || ''
+    const buyerName     = nameFromPayer || ((payment.metadata as any)?.buyer_name as string | undefined) || ''
     const amount        = payment.transaction_amount ?? 0
     const mpPaymentId   = String(payment.id)
     const paymentMethod = payment.payment_type_id ?? ''
@@ -101,7 +125,6 @@ export async function POST(req: NextRequest) {
     const productId  = payment.metadata?.product_id  as string   | undefined
 
     if (productIds && productIds.length > 0) {
-      // ── FLUXO CARRINHO ────────────────────────────────────────────
       return await handleCartPayment({
         payload, productIds, buyerEmail, buyerName,
         amount, mpPaymentId, paymentMethod, baseUrl,
@@ -109,7 +132,6 @@ export async function POST(req: NextRequest) {
     }
 
     if (productId) {
-      // ── FLUXO PRODUTO ÚNICO (original — backward compatible) ──────
       return await handleSinglePayment({
         payload, productId, buyerEmail, buyerName,
         amount, mpPaymentId, paymentMethod, baseUrl,
