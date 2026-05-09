@@ -102,7 +102,7 @@ async function processPaymentById(paymentId: string): Promise<NextResponse> {
     const buyerEmail    = isValidEmail(payerEmail) ? payerEmail : isValidEmail(metaEmail) ? metaEmail : ''
     const nameFromPayer = `${payment.payer?.first_name ?? ''} ${payment.payer?.last_name ?? ''}`.trim()
     const buyerName     = nameFromPayer || (meta?.buyer_name as string | undefined) || ''
-    console.log('[Webhook] paymentId:', payment.id, '| payerEmail:', payerEmail, '| metaEmail:', metaEmail, '| buyerEmail usado:', buyerEmail)
+
     const amount        = payment.transaction_amount ?? 0
     const mpPaymentId   = String(payment.id)
     const paymentMethod = payment.payment_type_id ?? ''
