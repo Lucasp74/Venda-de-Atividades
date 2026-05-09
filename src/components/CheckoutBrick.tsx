@@ -273,10 +273,8 @@ export default function CheckoutBrick({ productId, productTitle, price }: Props)
           }}
           customization={{
             paymentMethods: {
-              creditCard: 'all',
-              debitCard: 'all',
-              ticket: 'all',
-              bankTransfer: 'all',
+              creditCard:      'all',
+              bankTransfer:    'all',
               maxInstallments: 12,
             },
             visual: {

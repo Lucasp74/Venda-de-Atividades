@@ -185,8 +185,6 @@ export default function CartCheckoutBrick({ preferenceId, amount, buyerName, pro
         customization={{
           paymentMethods: {
             creditCard:      'all',
-            debitCard:       'all',
-            ticket:          'all',
             bankTransfer:    'all',
             maxInstallments: 12,
           },
