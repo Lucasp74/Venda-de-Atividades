@@ -46,13 +46,7 @@ export default function CartPage() {
     setError(null)
 
     try {
-      if (items.length === 1) {
-        // Produto único — usa o fluxo existente com o Checkout Brick
-        router.push(`/checkout/${items[0].slug}`)
-        return
-      }
-
-      // Múltiplos itens — cria preferência e mostra Brick inline
+      // Sempre usa o checkout inline — evita pedir o nome duas vezes
       const res = await fetch('/api/mercadopago/checkout', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
