@@ -48,8 +48,10 @@ export async function POST(req: NextRequest) {
   const rawBody = await req.text()
 
   if (!verifyWebhookSignature(req, rawBody)) {
+    console.error('[Webhook] Assinatura inválida — x-signature:', req.headers.get('x-signature'), '| x-request-id:', req.headers.get('x-request-id'), '| secret configurado:', !!process.env.MERCADOPAGO_WEBHOOK_SECRET)
     return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 })
   }
+  console.log('[Webhook] Assinatura válida — processando notificação')
 
   let notification: { type?: string; data?: { id?: string } }
   try {
