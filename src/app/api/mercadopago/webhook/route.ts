@@ -12,6 +12,10 @@ function generateDownloadToken(): string {
   return crypto.randomBytes(32).toString('hex')
 }
 
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+
 function verifyWebhookSignature(req: NextRequest, body: string): boolean {
   const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET
   if (!secret) {
@@ -93,9 +97,12 @@ async function processPaymentById(paymentId: string): Promise<NextResponse> {
     const meta = payment.metadata as Record<string, unknown> | undefined
 
     // PIX frequentemente não retorna email/nome pelo payer — usa metadata como fallback
-    const buyerEmail    = payment.payer?.email                             || (meta?.buyer_email as string | undefined) || ''
+    const payerEmail    = typeof payment.payer?.email === 'string' ? payment.payer.email : ''
+    const metaEmail     = typeof meta?.buyer_email === 'string'    ? meta.buyer_email    : ''
+    const buyerEmail    = isValidEmail(payerEmail) ? payerEmail : isValidEmail(metaEmail) ? metaEmail : ''
     const nameFromPayer = `${payment.payer?.first_name ?? ''} ${payment.payer?.last_name ?? ''}`.trim()
-    const buyerName     = nameFromPayer                                    || (meta?.buyer_name  as string | undefined) || ''
+    const buyerName     = nameFromPayer || (meta?.buyer_name as string | undefined) || ''
+    console.log('[Webhook] paymentId:', payment.id, '| payerEmail:', payerEmail, '| metaEmail:', metaEmail, '| buyerEmail usado:', buyerEmail)
     const amount        = payment.transaction_amount ?? 0
     const mpPaymentId   = String(payment.id)
     const paymentMethod = payment.payment_type_id ?? ''
