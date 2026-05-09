@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { processPayment } from '@/lib/mercadopago'
 import { getPool } from '@/lib/db'
-import { sendDownloadEmail } from '@/lib/email'
+import { sendDownloadEmail, sendPendingEmail } from '@/lib/email'
 import { trackServerPurchase } from '@/lib/analytics'
 import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
 import { isAllowedOrigin } from '@/lib/allowed-origin'
@@ -76,6 +76,7 @@ export async function POST(req: NextRequest) {
       },
       productId,
       productTitle: product.title,
+      buyerName:    submittedName,
     })
 
     const paymentStatus = payment.status ?? 'unknown'
@@ -160,6 +161,30 @@ export async function POST(req: NextRequest) {
           }),
         ])
       }
+    }
+
+    // Pagamento pendente (PIX/boleto) — envia e-mail de confirmação e retorna dados do QR code
+    if (paymentStatus === 'pending' || paymentStatus === 'in_process') {
+      const buyerEmail = payer?.email ?? ''
+      const isPix      = payment_method_id === 'pix'
+
+      if (buyerEmail) {
+        sendPendingEmail({
+          to:        buyerEmail,
+          buyerName: submittedName,
+          amount:    product.price,
+          isPix,
+        }).catch(err => console.warn('[ProcessPayment] Falha ao enviar e-mail pendente:', err))
+      }
+
+      const txData = (payment as any).point_of_interaction?.transaction_data
+      return NextResponse.json({
+        status:          paymentStatus,
+        status_detail:   payment.status_detail ?? '',
+        payment_id:      mpPaymentId,
+        qr_code:         txData?.qr_code         ?? null,
+        qr_code_base64:  txData?.qr_code_base64  ?? null,
+      })
     }
 
     return NextResponse.json({

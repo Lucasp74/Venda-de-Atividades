@@ -116,6 +116,7 @@ export type ProcessPaymentParams = {
   }
   productId:    string
   productTitle: string
+  buyerName?:   string
   sessionId?:   string
 }
 
@@ -143,6 +144,8 @@ export async function processPayment(params: ProcessPaymentParams) {
       notification_url: `${baseUrl}/api/mercadopago/webhook`,
       metadata: {
         product_id: params.productId,
+        // Salvo no metadata para recuperar no webhook (PIX não retorna nome pelo payer)
+        buyer_name: params.buyerName ?? '',
       },
     },
     requestOptions: {

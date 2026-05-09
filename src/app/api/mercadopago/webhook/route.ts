@@ -75,8 +75,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true, status: payment.status })
     }
 
-    const buyerEmail    = payment.payer?.email  ?? ''
-    const buyerName     = `${payment.payer?.first_name ?? ''} ${payment.payer?.last_name ?? ''}`.trim()
+    const buyerEmail     = payment.payer?.email  ?? ''
+    const nameFromPayer  = `${payment.payer?.first_name ?? ''} ${payment.payer?.last_name ?? ''}`.trim()
+    // PIX frequentemente não retorna nome pelo payer — usa o nome salvo no metadata como fallback
+    const buyerName      = nameFromPayer || ((payment.metadata as any)?.buyer_name as string | undefined) || ''
     const amount        = payment.transaction_amount ?? 0
     const mpPaymentId   = String(payment.id)
     const paymentMethod = payment.payment_type_id ?? ''

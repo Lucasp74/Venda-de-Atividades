@@ -15,7 +15,9 @@ type Props = {
   price:        number
 }
 
-type PaymentStatus = 'loading' | 'idle' | 'processing' | 'approved' | 'rejected' | 'pending' | 'error'
+type PaymentStatus = 'loading' | 'idle' | 'processing' | 'approved' | 'rejected' | 'pending' | 'pix' | 'error'
+
+type PixData = { qrCode: string; qrCodeBase64: string }
 
 export default function CheckoutBrick({ productId, productTitle, price }: Props) {
   const router = useRouter()
@@ -25,6 +27,8 @@ export default function CheckoutBrick({ productId, productTitle, price }: Props)
   const [preferenceId, setPreferenceId] = useState<string | null>(null)
   const [buyerName, setBuyerName]       = useState('')
   const [nameError, setNameError]       = useState(false)
+  const [pixData, setPixData]           = useState<PixData | null>(null)
+  const [pixCopied, setPixCopied]       = useState(false)
   // sessionId gerado uma única vez por montagem — garante idempotência em retries
   const sessionId = useRef<string>(globalThis.crypto.randomUUID())
 
@@ -109,8 +113,13 @@ export default function CheckoutBrick({ productId, productTitle, price }: Props)
         case 'in_process':
         case 'pending':
           clearCart()
-          setStatus('pending')
-          setTimeout(() => router.push('/checkout/pendente'), 2000)
+          if (data.qr_code && data.qr_code_base64) {
+            setPixData({ qrCode: data.qr_code, qrCodeBase64: data.qr_code_base64 })
+            setStatus('pix')
+          } else {
+            setStatus('pending')
+            setTimeout(() => router.push('/checkout/pendente'), 2000)
+          }
           break
         case 'rejected':
           setStatus('rejected')
@@ -155,6 +164,50 @@ export default function CheckoutBrick({ productId, productTitle, price }: Props)
         <h2 className="font-heading text-h3 text-secondary-600 mb-2">Pagamento Pendente</h2>
         <p className="text-ink-muted">Assim que o pagamento for confirmado, enviaremos o link de download.</p>
         <p className="text-caption text-ink-light mt-2">Redirecionando...</p>
+      </div>
+    )
+  }
+
+  if (status === 'pix' && pixData) {
+    return (
+      <div className="text-center py-8 px-4">
+        <div className="text-5xl mb-3">✅</div>
+        <h2 className="font-heading text-h3 text-ink mb-1">PIX gerado!</h2>
+        <p className="text-ink-muted text-body-sm mb-6">
+          Escaneie o QR code ou copie o código para pagar no app do seu banco.
+        </p>
+
+        {/* QR Code */}
+        <div className="flex justify-center mb-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`data:image/png;base64,${pixData.qrCodeBase64}`}
+            alt="QR Code PIX"
+            width={200}
+            height={200}
+            className="rounded-xl border border-gray-100 shadow-sm"
+          />
+        </div>
+
+        {/* Copia e Cola */}
+        <div className="bg-gray-50 rounded-xl p-4 mb-4 text-left">
+          <p className="text-caption text-ink-muted mb-2 font-700">PIX Copia e Cola</p>
+          <p className="text-[11px] text-ink break-all font-mono leading-relaxed">{pixData.qrCode}</p>
+        </div>
+        <button
+          onClick={() => {
+            navigator.clipboard.writeText(pixData.qrCode)
+            setPixCopied(true)
+            setTimeout(() => setPixCopied(false), 3000)
+          }}
+          className="btn-primary w-full mb-4"
+        >
+          {pixCopied ? '✅ Código copiado!' : '📋 Copiar código PIX'}
+        </button>
+
+        <p className="text-caption text-ink-light">
+          Após pagar, o link de download chegará no seu e-mail automaticamente.
+        </p>
       </div>
     )
   }

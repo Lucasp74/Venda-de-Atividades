@@ -4,7 +4,7 @@ import { Payment } from 'mercadopago'
 import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
 import { isAllowedOrigin } from '@/lib/allowed-origin'
 import { getPool } from '@/lib/db'
-import { sendCartDownloadEmail } from '@/lib/email'
+import { sendCartDownloadEmail, sendPendingEmail } from '@/lib/email'
 import crypto from 'crypto'
 
 const limiter = rateLimit({ interval: 60_000, limit: 5 })
@@ -74,7 +74,11 @@ export async function POST(req: NextRequest) {
         statement_descriptor: 'PRO DANI',
         // Webhook para pagamentos pendentes (PIX/boleto)
         notification_url:     `${baseUrl}/api/mercadopago/webhook`,
-        metadata: { product_ids: productIds },
+        metadata: {
+          product_ids: productIds,
+          // Salvo no metadata para recuperar no webhook (PIX não retorna nome pelo payer)
+          buyer_name: buyerName,
+        },
         ...(preferenceId ? { external_reference: preferenceId } : {}),
       },
       requestOptions: { idempotencyKey: crypto.randomUUID() },
@@ -168,6 +172,30 @@ export async function POST(req: NextRequest) {
           }
         }
       }
+    }
+
+    // Pagamento pendente (PIX/boleto) — envia e-mail de confirmação e retorna dados do QR code
+    if (paymentStatus === 'pending' || paymentStatus === 'in_process') {
+      const buyerEmail = payer?.email ?? ''
+      const isPix      = payment_method_id === 'pix'
+
+      if (buyerEmail) {
+        sendPendingEmail({
+          to:        buyerEmail,
+          buyerName,
+          amount:    finalAmount,
+          isPix,
+        }).catch(err => console.warn('[ProcessCartPayment] Falha ao enviar e-mail pendente:', err))
+      }
+
+      const txData = (payment as any).point_of_interaction?.transaction_data
+      return NextResponse.json({
+        status:         paymentStatus,
+        status_detail:  payment.status_detail ?? '',
+        payment_id:     mpPaymentId,
+        qr_code:        txData?.qr_code        ?? null,
+        qr_code_base64: txData?.qr_code_base64 ?? null,
+      })
     }
 
     return NextResponse.json({
