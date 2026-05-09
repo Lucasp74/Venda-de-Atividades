@@ -82,7 +82,9 @@ export default function CartPage() {
 
   // ── Carrinho vazio ───────────────────────────────────────────────────────
 
-  if (items.length === 0) {
+  // Só mostra "carrinho vazio" se não há checkout em andamento
+  // (clearCart() durante PIX não deve desmontar o brick antes do QR code aparecer)
+  if (items.length === 0 && !checkoutData) {
     return (
       <section className="py-20 flex flex-col items-center gap-6 text-center container-main">
         <span className="text-7xl" aria-hidden="true">🛒</span>

@@ -191,7 +191,6 @@ export async function POST(req: NextRequest) {
       }
 
       const txData = (payment as any).point_of_interaction?.transaction_data
-      console.log('[ProcessCartPayment] PIX point_of_interaction:', JSON.stringify((payment as any).point_of_interaction ?? null))
       return NextResponse.json({
         status:         paymentStatus,
         status_detail:  payment.status_detail ?? '',
