@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import { sendDownloadEmail } from '@/lib/email'
+import { sendDownloadEmail, sendCartDownloadEmail } from '@/lib/email'
 import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
+import { getPool } from '@/lib/db'
 
 // Limite conservador: no máximo 20 reenvios por minuto para qualquer IP
 const limiter = rateLimit({ interval: 60_000, limit: 20 })
 
 export async function POST(req: NextRequest) {
-  const rl = limiter(getClientIp(req))
+  const rl = await limiter(getClientIp(req))
   if (!rl.success) return rateLimitResponse(rl)
 
   try {
@@ -39,19 +40,44 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Pedido sem e-mail cadastrado.' }, { status: 400 })
     }
 
-    const baseUrl     = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
-    const downloadUrl = `${baseUrl}/api/download/${order.downloadToken}`
+    const baseUrl  = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
+    const buyerName = order.buyerName ?? ''
 
-    const productTitle = order.productTitle
-      ?? (typeof order.product === 'object' ? (order.product as { title?: string }).title : null)
-      ?? 'Atividade'
+    // Verifica se é pedido de carrinho (tem order_items) ou produto único
+    const { rows: orderItems } = await getPool().query<{
+      product_title: string
+      download_token: string
+    }>(
+      `SELECT product_title, download_token FROM order_items WHERE order_id = $1 ORDER BY id ASC`,
+      [orderId],
+    )
 
-    await sendDownloadEmail({
-      to:           order.email,
-      buyerName:    order.buyerName ?? '',
-      productTitle,
-      downloadUrl,
-    })
+    if (orderItems.length > 0) {
+      // ── Carrinho — envia e-mail com todos os links de download ──
+      const items = orderItems.map(item => ({
+        productTitle: item.product_title,
+        downloadUrl:  `${baseUrl}/api/download/${item.download_token}`,
+      }))
+
+      await sendCartDownloadEmail({
+        to: order.email,
+        buyerName,
+        items,
+      })
+    } else {
+      // ── Produto único — fluxo original ──────────────────────────
+      const downloadUrl  = `${baseUrl}/api/download/${order.downloadToken}`
+      const productTitle = order.productTitle
+        ?? (typeof order.product === 'object' ? (order.product as { title?: string }).title : null)
+        ?? 'Atividade'
+
+      await sendDownloadEmail({
+        to:           order.email,
+        buyerName,
+        productTitle,
+        downloadUrl,
+      })
+    }
 
     await payload.update({
       collection: 'orders',
