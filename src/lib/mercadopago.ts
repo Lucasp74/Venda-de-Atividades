@@ -129,9 +129,14 @@ export async function processPayment(params: ProcessPaymentParams) {
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
 
+  // token só existe em pagamentos com cartão — PIX/boleto não enviam token
+  const isCard = params.payment_method_id !== 'pix'
+    && params.payment_method_id !== 'bolbradesco'
+    && params.payment_method_id !== 'pec'
+
   const result = await paymentApi.create({
     body: {
-      token:              params.token,
+      ...(isCard && params.token ? { token: params.token } : {}),
       issuer_id:          Number(params.issuer_id) || undefined,
       payment_method_id:  params.payment_method_id,
       transaction_amount: Number(params.transaction_amount),

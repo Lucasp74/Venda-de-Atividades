@@ -48,7 +48,9 @@ export async function POST(req: NextRequest) {
       payer,
     } = paymentData
 
-    if (!token || !payment_method_id || (!transaction_amount && !amount)) {
+    // PIX e boleto não usam token — token é exclusivo de cartão
+    const isCard = payment_method_id !== 'pix' && payment_method_id !== 'bolbradesco' && payment_method_id !== 'pec'
+    if ((isCard && !token) || !payment_method_id || (!transaction_amount && !amount)) {
       return NextResponse.json({ error: 'Dados de pagamento incompletos' }, { status: 400 })
     }
 
