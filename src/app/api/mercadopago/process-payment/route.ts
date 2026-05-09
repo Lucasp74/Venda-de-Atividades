@@ -193,8 +193,14 @@ export async function POST(req: NextRequest) {
       payment_id:    mpPaymentId,
     })
   } catch (err: unknown) {
-    // Log completo server-side, mas nunca expõe detalhes internos ao cliente
     console.error('[ProcessPayment] Error:', err)
+    const mpErr = err as { status?: number; message?: string }
+    if (mpErr?.status === 400 && mpErr?.message?.includes('QR render')) {
+      return NextResponse.json(
+        { error: 'PIX indisponível no momento. Por favor, utilize cartão de crédito ou boleto.' },
+        { status: 400 },
+      )
+    }
     return NextResponse.json({ error: 'Erro ao processar pagamento. Tente novamente.' }, { status: 500 })
   }
 }

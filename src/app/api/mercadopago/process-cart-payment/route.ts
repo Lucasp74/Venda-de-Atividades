@@ -205,6 +205,13 @@ export async function POST(req: NextRequest) {
     })
   } catch (err) {
     console.error('[ProcessCartPayment] Error:', err)
+    const mpErr = err as { status?: number; message?: string }
+    if (mpErr?.status === 400 && mpErr?.message?.includes('QR render')) {
+      return NextResponse.json(
+        { error: 'PIX indisponível no momento. Por favor, utilize cartão de crédito ou boleto.' },
+        { status: 400 },
+      )
+    }
     return NextResponse.json(
       { error: 'Erro ao processar pagamento. Tente novamente.' },
       { status: 500 },
