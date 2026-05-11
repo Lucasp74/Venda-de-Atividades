@@ -3,12 +3,14 @@ import { Suspense } from 'react'
 import { getPayload } from 'payload'
 import type { Where } from 'payload'
 import config from '@payload-config'
-import ProductCard from '@/components/ProductCard'
 import CategoryFilter from '@/components/CategoryFilter'
+import LoadMoreProducts from '@/components/LoadMoreProducts'
 import type { Product } from '@/payload-types'
 
 // ISR: revalida a listagem a cada 30 minutos (hooks do Payload disparam revalidação imediata ao salvar)
 export const revalidate = 1800
+
+const PAGE_SIZE = 12
 
 export const metadata: Metadata = {
   title:       'Atividades para Professores',
@@ -32,8 +34,9 @@ async function getProducts(category?: string): Promise<{ docs: Product[]; totalD
     const result = await payload.find({
       collection: 'products',
       where: { and: conditions },
-      limit: 100,
-      sort: '-createdAt',
+      limit: PAGE_SIZE,
+      page:  1,
+      sort:  '-createdAt',
     })
     return { docs: result.docs as Product[], totalDocs: result.totalDocs }
   } catch {
@@ -44,7 +47,7 @@ async function getProducts(category?: string): Promise<{ docs: Product[]; totalD
 function ProductsSkeleton() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {Array.from({ length: 8 }).map((_, i) => (
+      {Array.from({ length: PAGE_SIZE }).map((_, i) => (
         <div key={i} className="rounded-2xl overflow-hidden bg-white shadow-card">
           <div className="skeleton aspect-[5/3] w-full" />
           <div className="p-4 space-y-2">
@@ -64,28 +67,13 @@ function ProductsSkeleton() {
 
 async function ProductGrid({ category }: { category?: string }) {
   const { docs, totalDocs } = await getProducts(category)
-
-  if (docs.length === 0) {
-    return (
-      <div className="text-center py-20" role="status">
-        <div className="text-6xl mb-4" aria-hidden="true">🔍</div>
-        <h3 className="font-heading font-700 text-h3 mb-2">Nenhuma atividade encontrada</h3>
-        <p className="text-ink-muted text-body">Tente outra categoria ou volte em breve para novidades!</p>
-      </div>
-    )
-  }
-
   return (
-    <>
-      <p className="text-ink-muted text-body-sm mb-6" role="status" aria-live="polite">
-        {totalDocs} {totalDocs === 1 ? 'atividade encontrada' : 'atividades encontradas'}
-      </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {docs.map(product => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
-    </>
+    <LoadMoreProducts
+      key={category ?? 'all'}
+      initialProducts={docs}
+      totalDocs={totalDocs}
+      category={category}
+    />
   )
 }
 
