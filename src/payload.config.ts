@@ -46,7 +46,7 @@ export default buildConfig({
     },
   },
   email: nodemailerAdapter({
-    defaultFromAddress: 'contato@profdani.com.br',
+    defaultFromAddress: process.env.EMAIL_FROM ?? 'contato@prodanitezolin.com.br',
     defaultFromName:    'Prô Dani',
     transportOptions: {
       host:   'smtp.resend.com',
