@@ -287,6 +287,98 @@ export async function sendPendingEmail({
   return data
 }
 
+// ── E-mail de redefinição de senha (admin) ─────────────────────────
+
+export function buildResetPasswordEmailHtml(resetUrl: string): string {
+  const year = new Date().getFullYear()
+
+  return `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body style="margin:0;padding:0;background-color:#FFF0F5;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#FFF0F5;">
+    <tr>
+      <td align="center" style="padding:40px 16px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+          style="max-width:580px;width:100%;background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 8px 40px rgba(255,107,157,0.15);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#FF6B9D 0%,#845EC2 100%);padding:40px 40px 32px;text-align:center;">
+              <div style="display:inline-block;width:64px;height:64px;background:rgba(255,255,255,0.2);border-radius:18px;line-height:64px;font-size:28px;margin-bottom:16px;">🔒</div>
+              <h1 style="margin:0 0 4px;color:#ffffff;font-size:26px;font-weight:800;letter-spacing:-0.5px;">Prô Dani</h1>
+              <p style="margin:0;color:rgba(255,255,255,0.80);font-size:14px;">Painel Administrativo</p>
+            </td>
+          </tr>
+
+          <!-- Faixa status -->
+          <tr>
+            <td style="background:#845EC2;padding:12px 40px;text-align:center;">
+              <p style="margin:0;color:#ffffff;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">🔐 &nbsp;Redefinição de Senha</p>
+            </td>
+          </tr>
+
+          <!-- Corpo -->
+          <tr>
+            <td style="padding:40px 40px 32px;">
+              <h2 style="margin:0 0 8px;font-size:24px;font-weight:800;color:#2D2D2D;">Redefinir sua senha</h2>
+              <p style="margin:0 0 28px;font-size:15px;color:#666666;line-height:1.7;">
+                Você (ou outra pessoa) solicitou a redefinição da senha da sua conta no painel administrativo.
+                Clique no botão abaixo para criar uma nova senha.
+              </p>
+
+              <!-- Destaque botão -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+                style="background:linear-gradient(135deg,#FFF0F5,#F3EEFF);border:2px dashed #845EC2;border-radius:20px;margin-bottom:32px;">
+                <tr>
+                  <td style="padding:28px 24px;text-align:center;">
+                    <a href="${resetUrl}"
+                      style="display:inline-block;background:linear-gradient(135deg,#FF6B9D,#845EC2);color:#ffffff;font-size:17px;font-weight:800;padding:18px 44px;border-radius:50px;text-decoration:none;box-shadow:0 6px 24px rgba(132,94,194,0.40);letter-spacing:0.2px;">
+                      🔑 &nbsp;Redefinir Minha Senha
+                    </a>
+                    <p style="margin:20px 0 0;font-size:12px;color:#bbbbbb;">Link válido por <strong>1 hora</strong></p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Fallback URL -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+                style="background:#f9f9f9;border-radius:12px;margin-bottom:28px;">
+                <tr>
+                  <td style="padding:16px 20px;">
+                    <p style="margin:0 0 4px;font-size:12px;color:#aaaaaa;">Se o botão não funcionar, copie e cole este link no navegador:</p>
+                    <p style="margin:0;font-size:12px;color:#845EC2;word-break:break-all;">${resetUrl}</p>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;font-size:14px;color:#888888;line-height:1.7;text-align:center;font-style:italic;">
+                Se você não fez essa solicitação, pode ignorar este e-mail — sua senha permanecerá a mesma.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f8f8f8;padding:24px 40px;text-align:center;border-top:1px solid #FFE4EF;">
+              <p style="margin:0 0 8px;font-size:13px;color:#aaaaaa;">Este é um e-mail automático. Por favor, não responda.</p>
+              <p style="margin:0;font-size:11px;color:#cccccc;">© ${year} Prô Dani · Atividades de Alfabetização</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim()
+}
+
 // ── E-mail de download — carrinho (múltiplos produtos) ────────────
 
 export async function sendCartDownloadEmail({

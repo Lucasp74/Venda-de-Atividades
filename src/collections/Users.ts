@@ -1,8 +1,18 @@
 import type { CollectionConfig } from 'payload'
+import { buildResetPasswordEmailHtml } from '@/lib/email'
 
 export const Users: CollectionConfig = {
   slug: 'users',
-  auth: true,
+  auth: {
+    forgotPassword: {
+      generateEmailSubject: () => 'Redefinir sua senha — Prô Dani',
+      generateEmailHTML: ({ token }) => {
+        const baseUrl  = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
+        const resetUrl = `${baseUrl}/admin/reset/${token}`
+        return buildResetPasswordEmailHtml(resetUrl)
+      },
+    },
+  },
   admin: {
     useAsTitle: 'email',
   },
