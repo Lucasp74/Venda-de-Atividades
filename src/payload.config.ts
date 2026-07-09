@@ -1,7 +1,8 @@
-import { postgresAdapter } from '@payloadcms/db-postgres'
-import { sqliteAdapter }   from '@payloadcms/db-sqlite'
-import { lexicalEditor }    from '@payloadcms/richtext-lexical'
-import { pt }               from '@payloadcms/translations/languages/pt'
+import { postgresAdapter }    from '@payloadcms/db-postgres'
+import { sqliteAdapter }      from '@payloadcms/db-sqlite'
+import { nodemailerAdapter }  from '@payloadcms/email-nodemailer'
+import { lexicalEditor }      from '@payloadcms/richtext-lexical'
+import { pt }                 from '@payloadcms/translations/languages/pt'
 import path   from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
@@ -44,6 +45,20 @@ export default buildConfig({
       },
     },
   },
+  email: nodemailerAdapter({
+    defaultFromAddress: 'contato@profdani.com.br',
+    defaultFromName:    'Prô Dani',
+    transportOptions: {
+      host:   'smtp.resend.com',
+      port:   465,
+      secure: true,
+      auth: {
+        user: 'resend',
+        pass: process.env.RESEND_API_KEY,
+      },
+    },
+  }),
+
   i18n: {
     fallbackLanguage: 'pt',
     supportedLanguages: { pt },
