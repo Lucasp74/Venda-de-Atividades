@@ -737,16 +737,21 @@
   /* ══════════════════════════════
      NOTIFICAÇÕES (TOAST)
   ══════════════════════════════ */
-  .toast--success {
-    background: #6BCB77 !important;
-    color: #FFFFFF !important;
+  .payload-toast-item {
     border-radius: 12px !important;
+    color: #2D2D2D !important;
   }
 
-  .toast--error {
-    background: #E05050 !important;
-    color: #FFFFFF !important;
-    border-radius: 12px !important;
+  .payload-toast-item.toast-success,
+  .payload-toast-item.toast-error,
+  .payload-toast-item.toast-warning,
+  .payload-toast-item.toast-info {
+    color: #2D2D2D !important;
+  }
+
+  .payload-toast-item .toast-content,
+  .payload-toast-item .toast-title {
+    color: #2D2D2D !important;
   }
 
   /* ══════════════════════════════
