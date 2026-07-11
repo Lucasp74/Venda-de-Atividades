@@ -64,7 +64,7 @@ export default buildConfig({
     supportedLanguages: { pt },
     translations: {
       pt: {
-        authentication: {
+        error: {
           emailOrPasswordIncorrect: 'Credenciais inválidas',
         },
       },
