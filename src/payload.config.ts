@@ -62,6 +62,13 @@ export default buildConfig({
   i18n: {
     fallbackLanguage: 'pt',
     supportedLanguages: { pt },
+    translations: {
+      pt: {
+        authentication: {
+          emailOrPasswordIncorrect: 'Credenciais inválidas',
+        },
+      },
+    },
   },
   collections: [Products, Orders, OrderItems, Media, Users],
   editor: lexicalEditor(),
