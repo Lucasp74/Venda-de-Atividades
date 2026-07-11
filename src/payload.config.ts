@@ -25,6 +25,13 @@ export default buildConfig({
     user: Users.slug,
     meta: {
       titleSuffix: ' — Prô Dani Admin',
+      icons: [
+        {
+          type: 'image/svg+xml',
+          rel:  'icon',
+          url:  '/icon.svg',
+        },
+      ],
     },
     css: path.resolve(dirname, 'app/(payload)/custom/admin.css'),
     components: {
