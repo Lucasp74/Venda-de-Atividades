@@ -132,7 +132,7 @@ export default function QuemSouEuPage() {
               </p>
               <div className="space-y-4 text-ink-muted text-body leading-relaxed max-w-[540px] mx-auto lg:mx-0">
                 <p>
-                  Sou professora há mais de 10 anos e sempre acreditei que aprender deve ser uma aventura cheia de cores, histórias e descobertas. Foi por isso que comecei a criar atividades especiais para tornar cada aula única.
+                  Soa professora há mais de 10 anos e sempre acreditei que aprender deve ser uma aventura cheia de cores, histórias e descobertas. Foi por isso que comecei a criar atividades especiais para tornar cada aula única.
                 </p>
                 <p>
                   Cada e-book que você encontra aqui foi desenvolvido com muito carinho, pensando no desenvolvimento integral das crianças e facilitando o trabalho das professoras e mamães.
