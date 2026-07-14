@@ -132,13 +132,24 @@ export default function QuemSouEuPage() {
               </p>
               <div className="space-y-4 text-ink-muted text-body leading-relaxed max-w-[540px] mx-auto lg:mx-0">
                 <p>
-                  Sou professora há mais de 10 anos e sempre acreditei que aprender deve ser uma aventura cheia de cores, histórias e descobertas. Foi por isso que comecei a criar atividades especiais para tornar cada aula única.
+                  Prazer, eu sou a Prô Dani! 🤍
                 </p>
                 <p>
-                  Cada e-book que você encontra aqui foi desenvolvido com muito carinho, pensando no desenvolvimento integral das crianças e facilitando o trabalho das professoras e mamães.
+                  Tenho 27 anos, sou professora apaixonada pela educação e uma melancólica assumida, daquelas que acredita que os detalhes fazem toda a diferença.
+                  Foi por isso que comecei a criar atividades especiais para tornar cada aula única.
                 </p>
                 <p>
-                  Meu sonho é que toda criança tenha acesso a materiais pedagógicos de qualidade, e que toda professora possa preparar aulas incríveis sem estresse!
+                  Estou há 8 anos em sala de aula, sendo 5 deles como professora regente. Atualmente, leciono para o 1º ano do Ensino Fundamental, fase pela qual tenho um carinho muito especial por ser o início da jornada da alfabetização.
+                  .
+                </p>
+                <p>
+                  Sou movida pelo desejo de aprender cada vez mais sobre o desenvolvimento infantil e os processos de aprendizagem. Acredito que cada criança aprende de uma forma única e, por isso, busco criar recursos visuais que tornem o aprendizado mais significativo, acessível e prazeroso.
+                </p>
+                <p>
+                  Foi dessa paixão que nasceu este espaço. Aqui, compartilho materiais e atividades criados com muito cuidado, carinho e intencionalidade pedagógica, com o propósito de facilitar o trabalho de outros professores e contribuir para uma aprendizagem mais leve, criativa e eficiente.
+                </p>
+                <p>
+                  Seja muito bem-vindo(a)! Espero que meus materiais façam parte da sua rotina e levem ainda mais significado às suas aulas. 💛
                 </p>
               </div>
 
