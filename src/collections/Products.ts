@@ -144,8 +144,11 @@ export const Products: CollectionConfig = {
       type: 'number',
       label: 'Preço (R$)',
       required: true,
-      min: 0.01,
-      admin: { step: 0.01 },
+      min: 0,
+      admin: {
+        step: 0.01,
+        description: 'Deixe 0 para tornar a atividade gratuita (a pessoa recebe por e-mail sem pagar).',
+      },
     },
     {
       name: 'coverImage',

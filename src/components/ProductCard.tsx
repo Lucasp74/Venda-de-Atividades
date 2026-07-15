@@ -40,9 +40,10 @@ export default function ProductCard({ product, featured = false }: Props) {
   const imgSrc = (cover as any)?.blobUrl ?? cover?.url ?? null
   const level  = LEVEL_LABELS[product.schoolLevel] ?? ''
 
-  const priceFormatted = new Intl.NumberFormat('pt-BR', {
-    style: 'currency', currency: 'BRL',
-  }).format(product.price)
+  const isFree = product.price === 0
+  const priceFormatted = isFree
+    ? 'Grátis'
+    : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)
 
   return (
     <Link
@@ -89,7 +90,7 @@ export default function ProductCard({ product, featured = false }: Props) {
               className="btn-primary text-sm px-4 py-2 min-h-[40px]"
               aria-hidden="true"
             >
-              Comprar
+              {isFree ? 'Baixar' : 'Comprar'}
             </span>
           </div>
         </div>

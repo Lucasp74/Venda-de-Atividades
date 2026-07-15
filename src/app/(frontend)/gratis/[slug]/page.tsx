@@ -6,11 +6,9 @@ import { notFound, redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import type { Product } from '@/payload-types'
-import CheckoutWrapper from '@/components/CheckoutWrapper'
+import FreeDownloadForm from '@/components/FreeDownloadForm'
 import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 
-// cache() deduplica chamadas com o mesmo slug na mesma requisição —
-// generateMetadata e CheckoutPage consultam o banco apenas uma vez.
 const getProduct = cache(async function (slug: string): Promise<Product | null> {
   try {
     const payload = await getPayload({ config })
@@ -33,26 +31,24 @@ const getProduct = cache(async function (slug: string): Promise<Product | null> 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const product  = await getProduct(slug)
-  if (!product) return { title: 'Checkout' }
+  if (!product) return { title: 'Download Grátis' }
   return {
-    title: `Checkout — ${product.title}`,
+    title: `Baixar Grátis — ${product.title}`,
     robots: { index: false, follow: false },
   }
 }
 
-export default async function CheckoutPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function FreeDownloadPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const product  = await getProduct(slug)
   if (!product) notFound()
-  if (product.price === 0) redirect(`/gratis/${slug}`)
+  if (product.price !== 0) redirect(`/checkout/${slug}`)
 
-  const cover          = typeof product.coverImage === 'object' ? product.coverImage : null
-  const imgSrc         = cover?.url ?? null
-  const priceFormatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)
+  const cover  = typeof product.coverImage === 'object' ? product.coverImage : null
+  const imgSrc = cover?.url ?? null
 
   return (
     <>
-      {/* Breadcrumb */}
       <nav className="bg-white border-b border-gray-100 py-3" aria-label="Breadcrumb">
         <div className="max-w-5xl mx-auto px-4">
           <ol className="flex items-center gap-2 text-body-sm text-ink-muted list-none">
@@ -64,7 +60,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
               <Link href={`/atividades/${slug}`} className="hover:text-primary transition-colors">{product.title}</Link>
             </li>
             <li aria-hidden="true">/</li>
-            <li className="text-ink font-700">Checkout</li>
+            <li className="text-ink font-700">Download Grátis</li>
           </ol>
         </div>
       </nav>
@@ -73,10 +69,9 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
         <div className="max-w-5xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
 
-            {/* ── Resumo do Produto (sidebar) ── */}
             <div className="lg:col-span-2 lg:sticky lg:top-24">
               <div className="bg-white rounded-2xl border-2 border-primary-100 p-5 shadow-card">
-                <h2 className="font-heading font-700 text-h4 text-ink mb-4">Resumo do pedido</h2>
+                <h2 className="font-heading font-700 text-h4 text-ink mb-4">Resumo</h2>
 
                 <div className="flex gap-4 items-start mb-4">
                   {imgSrc ? (
@@ -105,34 +100,19 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
                 <div className="border-t border-gray-100 pt-4">
                   <div className="flex justify-between items-baseline">
                     <span className="text-ink-muted text-body-sm">Total</span>
-                    <span className="font-heading font-800 text-h3 text-primary">{priceFormatted}</span>
+                    <span className="font-heading font-800 text-h3 text-accent-green">Grátis</span>
                   </div>
-                </div>
-
-                <div className="mt-4 space-y-2">
-                  {[
-                    { icon: '\u{1F4E5}', text: 'Download imediato' },
-                    { icon: '\u{1F5A8}', text: 'Pronto para imprimir' },
-                    { icon: '\u{1F512}', text: 'Pagamento 100% seguro' },
-                  ].map(({ icon, text }) => (
-                    <div key={text} className="flex items-center gap-2 text-caption text-ink-muted">
-                      <span aria-hidden="true">{icon}</span>
-                      <span>{text}</span>
-                    </div>
-                  ))}
                 </div>
               </div>
             </div>
 
-            {/* ── Formulário de Pagamento (Brick) ── */}
             <div className="lg:col-span-3">
               <div className="bg-white rounded-2xl border-2 border-primary-100 p-5 md:p-8 shadow-card">
-                <h1 className="font-heading font-700 text-h3 text-ink mb-6">Dados de Pagamento</h1>
-                <CheckoutWrapper
-                  productId={product.id.toString()}
-                  productTitle={product.title}
-                  price={product.price}
-                />
+                <h1 className="font-heading font-700 text-h3 text-ink mb-2">Receber por e-mail</h1>
+                <p className="text-ink-muted text-body-sm mb-6">
+                  Preencha seus dados abaixo para receber o link de download gratuitamente.
+                </p>
+                <FreeDownloadForm productSlug={slug} />
               </div>
             </div>
 

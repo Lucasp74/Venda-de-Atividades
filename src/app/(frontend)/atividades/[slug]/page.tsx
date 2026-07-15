@@ -98,7 +98,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const cover      = typeof product.coverImage === 'object' ? product.coverImage : null
   const imgSrc     = (cover as any)?.blobUrl ?? cover?.url ?? null
   const catLabel   = CATEGORY_LABELS[product.category] ?? product.category
-  const priceFormatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)
+  const isFree          = product.price === 0
+  const priceFormatted  = isFree
+    ? 'Grátis'
+    : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)
 
   const base     = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://prodanitezolin.com.br'
   const faqJsonLd = {
@@ -168,15 +171,17 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <span className="font-heading font-800 text-h3 text-primary tabular-nums leading-tight">{priceFormatted}</span>
         </div>
         <div className="flex-shrink-0 flex items-center gap-2">
-          <AddToCartButton
-            productId={String(product.id)}
-            slug={product.slug ?? ''}
-            title={product.title}
-            price={product.price}
-            coverImage={(product.coverImage as any)?.blobUrl ?? (product.coverImage as any)?.url ?? null}
-            compact
-          />
-          <BuyButton productSlug={product.slug} productTitle={product.title} compact />
+          {!isFree && (
+            <AddToCartButton
+              productId={String(product.id)}
+              slug={product.slug ?? ''}
+              title={product.title}
+              price={product.price}
+              coverImage={(product.coverImage as any)?.blobUrl ?? (product.coverImage as any)?.url ?? null}
+              compact
+            />
+          )}
+          <BuyButton productSlug={product.slug} productTitle={product.title} price={product.price} compact />
         </div>
       </div>
 
@@ -267,23 +272,25 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <div className="bg-white rounded-2xl border-2 border-primary-100 p-6 mt-2">
                 <div className="flex items-baseline gap-2 mb-4">
                   <span className="font-heading font-800 text-display text-primary tabular-nums">{priceFormatted}</span>
-                  <span className="text-ink-muted text-body-sm">pagamento único</span>
+                  {!isFree && <span className="text-ink-muted text-body-sm">pagamento único</span>}
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  <BuyButton productSlug={product.slug} productTitle={product.title} />
-                  <AddToCartButton
-                    productId={String(product.id)}
-                    slug={product.slug ?? ''}
-                    title={product.title}
-                    price={product.price}
-                    coverImage={(product.coverImage as any)?.blobUrl ?? (product.coverImage as any)?.url ?? null}
-                  />
+                  <BuyButton productSlug={product.slug} productTitle={product.title} price={product.price} />
+                  {!isFree && (
+                    <AddToCartButton
+                      productId={String(product.id)}
+                      slug={product.slug ?? ''}
+                      title={product.title}
+                      price={product.price}
+                      coverImage={(product.coverImage as any)?.blobUrl ?? (product.coverImage as any)?.url ?? null}
+                    />
+                  )}
                 </div>
 
                 <p className="text-caption text-ink-light text-center mt-4 flex items-center justify-center gap-1">
                   <span aria-hidden="true">🔒</span>
-                  Pagamento seguro via Mercado Pago · PIX, Cartão ou Boleto
+                  {isFree ? 'Envio seguro por e-mail' : 'Pagamento seguro via Mercado Pago · PIX, Cartão ou Boleto'}
                 </p>
               </div>
             </div>
