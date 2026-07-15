@@ -176,12 +176,12 @@ export default async function HomePage() {
           <p className="text-ink-muted text-body text-center mb-10">
             Encontre a atividade perfeita para cada momento da aula
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+          <div className="flex flex-wrap justify-center gap-3">
             {CATEGORIES_DISPLAY.map(({ value, label, color }) => (
               <Link
                 key={value}
                 href={`/atividades?cat=${value}`}
-                className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 ${color} hover:scale-105 transition-all duration-200 font-700 text-body-sm text-center min-h-[44px]`}
+                className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 ${color} hover:scale-105 transition-all duration-200 font-700 text-body-sm text-center min-h-[44px] w-28 sm:w-32`}
                 aria-label={`Ver atividades de ${label}`}
               >
                 <span className="text-2xl" aria-hidden="true">{CATEGORY_ICONS[value]}</span>
