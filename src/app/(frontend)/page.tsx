@@ -224,7 +224,7 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { step: '01', icon: '🔍', title: 'Escolha a atividade', desc: 'Navegue pelas categorias e encontre a atividade ideal para a sua turma.' },
-              { step: '02', icon: '💳', title: 'Pague com segurança',  desc: 'Pague via PIX, cartão de crédito ou boleto. 100% seguro pelo Mercado Pago.' },
+              { step: '02', icon: '💳', title: 'Pague com segurança',  desc: 'Pague via PIX ou cartão de crédito, com total segurança pelo Mercado Pago.' },
               { step: '03', icon: '📥', title: 'Baixe na hora',        desc: 'Após o pagamento, você recebe o link de download no seu e-mail automaticamente.' },
             ].map(({ step, icon, title, desc }) => (
               <div key={step} className="bg-white rounded-2xl p-6 shadow-card text-center">

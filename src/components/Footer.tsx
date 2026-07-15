@@ -39,7 +39,7 @@ export default function Footer() {
 
           {/* Métodos de pagamento — linha 3 no mobile, direita no desktop */}
           <div className="flex items-center sm:justify-end gap-2 flex-wrap">
-            {['PIX', 'Cartão', 'Boleto'].map((m) => (
+            {['PIX', 'Cartão'].map((m) => (
               <span key={m} className="bg-white/10 rounded px-2 py-0.5 text-caption font-700 text-ink-light">
                 {m}
               </span>
