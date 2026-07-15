@@ -23,7 +23,7 @@ export default function LoadMoreProducts({ initialProducts, totalDocs, category 
     setLoading(true)
     try {
       const nextPage = page + 1
-      const url = `/api/products?page=${nextPage}&limit=${PAGE_SIZE}${category ? `&cat=${encodeURIComponent(category)}` : ''}`
+      const url = `/api/products/list?page=${nextPage}&limit=${PAGE_SIZE}${category ? `&cat=${encodeURIComponent(category)}` : ''}`
       const res  = await fetch(url)
       const data = await res.json() as { docs: Product[] }
       setProducts(prev => [...prev, ...data.docs])
