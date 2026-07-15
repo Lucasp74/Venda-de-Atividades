@@ -82,7 +82,11 @@ export const Products: CollectionConfig = {
           // revalidatePath invalida o HTML das p\u00e1ginas em ISR
           revalidatePath('/', 'page')
           revalidatePath('/atividades', 'page')
-          revalidatePath(`/atividades/${doc.slug}`, 'page')
+          // Rota dinâmica: revalidar pelo PADRÃO [slug], não pela URL resolvida.
+          // revalidatePath('/atividades/jogo-silabas', 'page') NÃO invalida o
+          // cache, que é indexado por '/atividades/[slug]'. Isso deixava a capa
+          // desatualizada na página de detalhe até o ISR expirar (30 min).
+          revalidatePath('/atividades/[slug]', 'page')
         } catch (e) {
           console.error('[Products] falha ao revalidar cache:', e)
         }
