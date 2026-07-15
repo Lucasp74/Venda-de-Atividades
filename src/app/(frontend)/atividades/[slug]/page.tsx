@@ -9,8 +9,10 @@ import BuyButton        from '@/components/BuyButton'
 import AddToCartButton  from '@/components/AddToCartButton'
 import { BLUR_DATA_URL } from '@/lib/blur-placeholder'
 
-// ── ISR: revalida cada página de produto a cada 30 minutos
-export const revalidate = 1800
+// ── ISR: 60s como rede de segurança. O hook afterChange de Products.ts
+// revalida na hora ao salvar; este limite curto garante que, se alguma
+// revalidação escapar, a página se autocorrige em até 1 min (não 30 min).
+export const revalidate = 60
 
 const CATEGORY_LABELS: Record<string, string> = {
   alfabetizacao: 'Alfabetização e Leitura',
