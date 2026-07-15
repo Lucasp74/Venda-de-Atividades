@@ -21,10 +21,7 @@ const SECTIONS: { title: string; items: Item[] }[] = [
     items: [
       { type: 'internal', href: '/atividades?cat=alfabetizacao', label: 'Alfabetização' },
       { type: 'internal', href: '/atividades?cat=matematica',    label: 'Matemática'    },
-      { type: 'internal', href: '/atividades?cat=artes',         label: 'Artes'         },
-      { type: 'internal', href: '/atividades?cat=ciencias',      label: 'Ciências'      },
       { type: 'internal', href: '/atividades?cat=jogos',         label: 'Jogos'         },
-      { type: 'internal', href: '/atividades?cat=sequencias',    label: 'Sequências'    },
     ],
   },
   {
