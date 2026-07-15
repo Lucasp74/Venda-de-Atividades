@@ -61,11 +61,9 @@ const VALUES = [
 
 const TAGS = [
   '🎓 Pedagogia',
-  '🎨 Artes Visuais',
   '📚 Alfabetização',
   '🔢 Matemática Lúdica',
-  '🌱 Ed. Infantil',
-  '💛 10+ anos de sala',
+  '💛 8 anos de sala',
 ]
 
 const personJsonLd = {
