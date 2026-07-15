@@ -4,9 +4,15 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useRef, useState } from 'react'
 import { CATEGORIES as PRODUCT_CATEGORIES } from '@/collections/Products'
 
+// Ocultas do filtro da página /atividades — continuam válidas no admin,
+// só não aparecem como botão de categoria aqui.
+const HIDDEN_CATEGORIES = new Set(['artes', 'ciencias', 'sequencias', 'educacao-fisica'])
+
 const CATEGORIES = [
   { value: '', label: 'Todas' },
-  ...PRODUCT_CATEGORIES.map(({ value, label }) => ({ value, label })),
+  ...PRODUCT_CATEGORIES
+    .filter(({ value }) => !HIDDEN_CATEGORIES.has(value))
+    .map(({ value, label }) => ({ value, label })),
 ]
 
 function CategoryButton({
